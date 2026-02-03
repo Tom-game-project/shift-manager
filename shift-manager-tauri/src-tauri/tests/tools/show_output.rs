@@ -36,7 +36,7 @@ pub fn show_monthly_shift_result_debug_data(monthly_shift_result: &MonthlyShiftR
                 }
             }
             None => {
-                println!("   (Skipped / ルール未適用 または 未生成)");
+                println!("   (Skipped)");
             }
         }
     }

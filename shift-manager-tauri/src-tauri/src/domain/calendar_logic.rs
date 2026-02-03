@@ -2,7 +2,6 @@ use crate::domain::shift_calendar_model::{
     AbsWeek, 
     ShiftCalendarManager, 
     WeekStatus,
-    LogicalDelta,
     RuleId,
 };
 
@@ -37,16 +36,6 @@ impl ShiftCalendarManager {
         } else {
             Ok(abs_week - self.base_abs_week)
         }
-    }
-
-    /// 直近の有効なDeltaを探すヘルパー
-    fn find_last_active_delta(&self) -> Option<LogicalDelta> {
-        self.timeline.iter().rev().find_map(|slot| match slot {
-            WeekStatus::Active {
-                logical_delta, rule_id:_
-            } => Some(*logical_delta),
-            WeekStatus::Skipped => None,
-        })
     }
 
     /// 【重要】指定した絶対週以降をすべて削除する（Truncate）
