@@ -32,8 +32,8 @@ export interface WeeklyRule {
 export interface RuleAssignment {
   id: number;
   weekly_rule_id: number;
-  weekday: number;
-  shift_time_type: number;
+  weekday: number | string;
+  shift_time_type: number | string;
   target_group_id: number;
   target_member_index: number;
 }
@@ -49,9 +49,11 @@ export interface PlanConfig {
   rules: WeeklyRuleWithAssignments[];
 }
 
+export type WeekState = 'pending_active' | 'pending_skip' | 'fixed_active' | 'fixed_skip';
+
 // カレンダー状態 (Rust Enum -> TS Tagged Union)
-export type WeekStatus = 
-  | { type: "active", content: { logical_delta: number, rule_id: number } } 
+export type WeekStatus =
+  | { type: "active", content: { logical_delta: number, rule_id: number } }
   | { type: "skipped", content: null };
 
 export interface ShiftCalendarManager {
@@ -64,14 +66,14 @@ export interface ShiftCalendarManager {
 
 // 決定したシフトの型
 export interface DailyShiftDto {
-    morning: string[];
-    afternoon: string[];
+  morning: string[];
+  afternoon: string[];
 }
 
 export interface WeeklyShiftDto {
-    days: DailyShiftDto[];
+  days: DailyShiftDto[];
 }
 
 export interface MonthlyShiftResult {
-    weeks: (WeeklyShiftDto | null)[];
+  weeks: (WeeklyShiftDto | null)[];
 }
