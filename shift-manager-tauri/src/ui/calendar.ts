@@ -1,8 +1,9 @@
-
+import { api } from "../api";
 import { calculateCalendarDates } from "../utils";
-import { WeekState } from "../types";
+import { WeekState, MonthlyShiftResult } from "../types";
 
 export async function renderCalendarView(
+    planId: number,
     year: number,
     month: number,
     pendingSkips: Record<string, boolean>
@@ -19,13 +20,20 @@ export async function renderCalendarView(
 
     const weeksData = calculateCalendarDates(year, month);
 
+    let shiftData: MonthlyShiftResult = { weeks: [] };
+    try {
+        shiftData = await api.deriveMonthlyShift(planId, year, month);
+    } catch (e) {
+        console.error("Failed to derive shifts:", e);
+    }
+
 
 
 
 
     mount.innerHTML = '';
 
-    weeksData.forEach((week) => {
+    weeksData.forEach((week, i) => {
         const weekKey = week.days[0].toISOString().split('T')[0];
         let state: WeekState = 'pending_active';
 
@@ -107,13 +115,45 @@ export async function renderCalendarView(
         row.appendChild(controlCell);
 
         // Day Cells
-        week.days.forEach((day) => {
+        week.days.forEach((day, dayIndex) => {
             const cell = document.createElement('div');
             cell.className = 'cal-cell-day';
             cell.textContent = day.getDate().toString();
 
             if (day.getMonth() !== month) {
                 cell.style.opacity = '0.3';
+            }
+
+            const weekShift = shiftData?.weeks?.[i];
+            if (weekShift) {
+                const dailyShift = weekShift.days[dayIndex];
+                if (dailyShift) {
+                    if (dailyShift.morning && dailyShift.morning.length > 0) {
+                        const mBadge = document.createElement('div');
+                        mBadge.className = 'shift-badge morning';
+                        mBadge.style.fontSize = '0.75em';
+                        mBadge.style.backgroundColor = 'var(--primary-soft)';
+                        mBadge.style.color = 'var(--primary-dark)';
+                        mBadge.style.padding = '2px 6px';
+                        mBadge.style.borderRadius = '12px';
+                        mBadge.style.marginBottom = '4px';
+                        mBadge.style.fontWeight = '500';
+                        mBadge.textContent = `AM: ${dailyShift.morning.join(', ')}`;
+                        cell.appendChild(mBadge);
+                    }
+                    if (dailyShift.afternoon && dailyShift.afternoon.length > 0) {
+                        const aBadge = document.createElement('div');
+                        aBadge.className = 'shift-badge afternoon';
+                        aBadge.style.fontSize = '0.75em';
+                        aBadge.style.backgroundColor = 'hsl(340, 100%, 95%)';
+                        aBadge.style.color = 'hsl(340, 60%, 50%)';
+                        aBadge.style.padding = '2px 6px';
+                        aBadge.style.borderRadius = '12px';
+                        aBadge.style.fontWeight = '500';
+                        aBadge.textContent = `PM: ${dailyShift.afternoon.join(', ')}`;
+                        cell.appendChild(aBadge);
+                    }
+                }
             }
 
 

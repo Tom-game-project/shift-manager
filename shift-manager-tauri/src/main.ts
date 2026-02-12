@@ -88,7 +88,7 @@ async function reloadConfig() {
    ========================================================================== */
 async function renderCalendarViewWrapped() {
     if (!currentPlanId) return;
-    await renderCalendarView(currentYear, currentMonth, pendingSkips);
+    await renderCalendarView(currentPlanId, currentYear, currentMonth, pendingSkips);
 }
 
 // Generateボタン: UI上のスキップ設定を集めてバックエンドへ送る
