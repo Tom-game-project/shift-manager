@@ -1,0 +1,5 @@
+h1:kYdc0HFitymEi09I0JOIGib+nt0DwaKTr/m/RNJ+ckY=
+20260118074126_init.sql h1:K/BxFT6XTpORSARuEWLRSEfwNfhJe1Dk4R4IunA+cWI=
+20260120161835_create_initial_setup.sql h1:ejv9mXYXnDvvlC4FQ22Jje5D4ShZpzfEXlP+S9oQ/jg=
+20260120170000_create_rules.sql h1:DB7iICWLrRFieohyO8a7djizpezGFxNz9LhisoZI9zQ=
+20260121044856_add_rule_id_to_weekly_statuses.sql h1:mm8WZ88sT5k1qJfajRm/PLrwzRLwsqsJV7y7leHwlZs=

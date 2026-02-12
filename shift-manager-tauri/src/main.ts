@@ -88,7 +88,7 @@ async function reloadConfig() {
    ========================================================================== */
 async function renderCalendarViewWrapped() {
     if (!currentPlanId) return;
-    await renderCalendarView(currentPlanId, currentYear, currentMonth, pendingSkips);
+    await renderCalendarView(currentYear, currentMonth, pendingSkips);
 }
 
 // Generateボタン: UI上のスキップ設定を集めてバックエンドへ送る
@@ -119,7 +119,7 @@ async function handleGenerate() {
     console.log("Sending skips to Rust:", skipFlags);
 
     try {
-        await api.generateAndSaveShift(currentPlanId, skipFlags);
+        await api.generateAndSaveShift(currentPlanId, skipFlags, currentYear, currentMonth);
         pendingSkips = {}; // Clear pending state
         await renderCalendarViewWrapped();
         alert("Schedule Generated & Saved!");

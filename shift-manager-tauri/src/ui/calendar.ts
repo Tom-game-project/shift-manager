@@ -1,9 +1,8 @@
-import { api } from "../api";
+
 import { calculateCalendarDates } from "../utils";
-import { WeekStatus, WeekState, MonthlyShiftResult } from "../types";
+import { WeekState } from "../types";
 
 export async function renderCalendarView(
-    planId: number,
     year: number,
     month: number,
     pendingSkips: Record<string, boolean>
@@ -20,43 +19,20 @@ export async function renderCalendarView(
 
     const weeksData = calculateCalendarDates(year, month);
 
-    let shiftData: MonthlyShiftResult = { weeks: [] };
-    try {
-        shiftData = await api.deriveMonthlyShift(planId, year, month);
-    } catch (e) {
-        console.error("Failed to derive shifts:", e);
-    }
 
-    let savedTimeline: WeekStatus[] = [];
-    try {
-        const savedManager = await api.getCalendarState(planId);
-        if (savedManager) {
-            savedTimeline = savedManager.timeline;
-        }
-    } catch (e) {
-        // No saved state
-    }
+
+
 
     mount.innerHTML = '';
 
-    weeksData.forEach((week, i) => {
+    weeksData.forEach((week) => {
         const weekKey = week.days[0].toISOString().split('T')[0];
         let state: WeekState = 'pending_active';
 
-        const savedStatus = savedTimeline[i]; // Approximate index matching
-
-        if (savedStatus) {
-            if (savedStatus.type === 'skipped') {
-                state = 'fixed_skip';
-            } else {
-                state = 'fixed_active';
-            }
+        if (pendingSkips[weekKey] === true) {
+            state = 'pending_skip';
         } else {
-            if (pendingSkips[weekKey] === true) {
-                state = 'pending_skip';
-            } else {
-                state = 'pending_active';
-            }
+            state = 'pending_active';
         }
 
         const row = document.createElement('div');
@@ -81,14 +57,7 @@ export async function renderCalendarView(
                 input.checked = true;
                 input.disabled = false;
                 break;
-            case 'fixed_active':
-                input.checked = false;
-                input.disabled = true;
-                break;
-            case 'fixed_skip':
-                input.checked = true;
-                input.disabled = true;
-                break;
+
         }
 
         input.onchange = (e) => {
@@ -103,7 +72,8 @@ export async function renderCalendarView(
         };
 
         const slider = document.createElement('span');
-        slider.className = `slider ${state.replace('_', '-')}`;
+        const sliderClass = state === 'pending_active' ? 'pending-active' : 'pending-skip'; // simplified since fix is gone
+        slider.className = `slider ${sliderClass}`;
 
         switchLabel.appendChild(input);
         switchLabel.appendChild(slider);
@@ -124,14 +94,7 @@ export async function renderCalendarView(
                 labelText = "SKIP";
                 labelColorClass = "text-skip";
                 break;
-            case 'fixed_active':
-                labelText = "FIXED";
-                labelColorClass = "text-fixed-active";
-                break;
-            case 'fixed_skip':
-                labelText = "VOID";
-                labelColorClass = "text-fixed-skip";
-                break;
+
         }
 
         statusText.classList.add(labelColorClass);
@@ -144,7 +107,7 @@ export async function renderCalendarView(
         row.appendChild(controlCell);
 
         // Day Cells
-        week.days.forEach((day, dayIndex) => {
+        week.days.forEach((day) => {
             const cell = document.createElement('div');
             cell.className = 'cal-cell-day';
             cell.textContent = day.getDate().toString();
@@ -153,44 +116,9 @@ export async function renderCalendarView(
                 cell.style.opacity = '0.3';
             }
 
-            if (state.startsWith('fixed')) {
-                cell.style.backgroundColor = '#f9f9f9';
-                cell.style.color = '#888';
-            }
 
-            if (state === 'fixed_active') {
-                const weekShift = shiftData?.weeks?.[i];
-                if (weekShift) {
-                    const dailyShift = weekShift.days[dayIndex];
-                    if (dailyShift) {
-                        if (dailyShift.morning && dailyShift.morning.length > 0) {
-                            const mBadge = document.createElement('div');
-                            mBadge.className = 'shift-badge morning';
-                            mBadge.style.fontSize = '0.75em';
-                            mBadge.style.backgroundColor = 'var(--primary-soft)';
-                            mBadge.style.color = 'var(--primary-dark)';
-                            mBadge.style.padding = '2px 6px';
-                            mBadge.style.borderRadius = '12px';
-                            mBadge.style.marginBottom = '4px';
-                            mBadge.style.fontWeight = '500';
-                            mBadge.textContent = `AM: ${dailyShift.morning.join(', ')}`;
-                            cell.appendChild(mBadge);
-                        }
-                        if (dailyShift.afternoon && dailyShift.afternoon.length > 0) {
-                            const aBadge = document.createElement('div');
-                            aBadge.className = 'shift-badge afternoon';
-                            aBadge.style.fontSize = '0.75em';
-                            aBadge.style.backgroundColor = 'hsl(340, 100%, 95%)';
-                            aBadge.style.color = 'hsl(340, 60%, 50%)';
-                            aBadge.style.padding = '2px 6px';
-                            aBadge.style.borderRadius = '12px';
-                            aBadge.style.fontWeight = '500';
-                            aBadge.textContent = `PM: ${dailyShift.afternoon.join(', ')}`;
-                            cell.appendChild(aBadge);
-                        }
-                    }
-                }
-            }
+
+
 
             row.appendChild(cell);
         });

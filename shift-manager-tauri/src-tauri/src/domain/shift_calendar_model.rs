@@ -24,8 +24,6 @@ pub struct ShiftCalendarManager {
     pub plan_id: PlanId,
     pub base_abs_week: AbsWeek,
     pub initial_delta: LogicalDelta,
-    pub timeline: Vec<WeekStatus>,
+    // pub timeline: Vec<WeekStatus>,
 }
-
-
 

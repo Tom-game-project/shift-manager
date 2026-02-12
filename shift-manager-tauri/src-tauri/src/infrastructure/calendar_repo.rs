@@ -227,24 +227,23 @@ impl CalendarRepository {
             None => return Ok(None),
         };
 
-        let rows: Vec<WeekStatusRow> = sqlx::query_as("
-            SELECT week_offset, status_type, logical_delta, rule_id 
-            FROM weekly_statuses 
-            WHERE calendar_id = ?
-            ORDER BY week_offset ASC")
-            .bind(header.id)
-            .fetch_all(&self.pool)
-            .await
-            .map_err(|e| e.to_string())?;
+        // let rows: Vec<WeekStatusRow> = sqlx::query_as("
+        //     SELECT week_offset, status_type, logical_delta, rule_id 
+        //     FROM weekly_statuses 
+        //     WHERE calendar_id = ?
+        //     ORDER BY week_offset ASC")
+        //     .bind(header.id)
+        //     .fetch_all(&self.pool)
+        //     .await
+        //     .map_err(|e| e.to_string())?;
 
-        let timeline = rows.into_iter().map(|row| row.try_into()).collect::<Result<Vec<_>,_>>()?;
+        // let timeline = rows.into_iter().map(|row| row.try_into()).collect::<Result<Vec<_>,_>>()?;
 
         Ok(Some(ShiftCalendarManager {
             id: Some(header.id),
             plan_id: header.plan_id,
             base_abs_week: header.base_abs_week as usize,
             initial_delta: header.initial_delta as usize,
-            timeline,
         }))
     }
 

@@ -113,6 +113,7 @@ pub fn run() {
             application::commands::delete_assignment,
             application::commands::get_calendar_state,
             application::commands::derive_monthly_shift,
+            application::commands::generate_and_save_shift,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

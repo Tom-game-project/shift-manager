@@ -98,10 +98,73 @@ pub async fn create_calendar(plan_id: i64, base_abs_week: usize, initial_delta: 
     repo.calendar.create_calendar(plan_id, base_abs_week, initial_delta).await
 }
 
+
 #[tauri::command]
-pub async fn append_timeline(plan_id: i64, start_abs_week: usize, statuses: Vec<Option<i64>>, repo: State<'_, AppServices>) -> Result<(), String> {
+pub async fn append_timeline(
+    plan_id: i64,
+    start_abs_week: usize,
+    statuses: Vec<Option<i64/*rule id*/>>, 
+    repo: State<'_, AppServices>
+    ) -> Result<(), String> {
     // Repository側の try_to_append_timeline を呼び出す
     repo.calendar.try_to_append_timeline(plan_id, start_abs_week, statuses).await
+}
+
+#[tauri::command]
+pub async fn generate_and_save_shift(
+    plan_id: i64, 
+    skips: Vec<bool>, 
+    year: i32, 
+    month: u32,
+    repo: State<'_, AppServices>,
+) -> Result<(), String> {
+    // 1. ルールの取得 (TODO: 複数ルール対応。現状は最初の1つを使う)
+    // plan_config経由でルール一覧を取得する
+    let config = repo.rule.get_plan_config(plan_id).await?;
+    if config.rules.is_empty() {
+        return Err("No weekly rules defined. Please create a rule first.".to_string());
+    }
+    // ひとまず先頭のルールを使用
+    let default_rule_id = config.rules[0].rule.id;
+
+    // カレンダー情報の取得
+    let calendar_opt = repo.calendar.find_by_plan_id(plan_id).await?;
+
+    let start_week_abs: usize = if let Some(cal) = calendar_opt {
+        // [ケースB] 既存カレンダーあり -> 末尾に追加
+
+        let _calendar_id = cal.id.ok_or("Calendar ID is missing")?;
+        calculate_abs_week(year, month, 1).ok_or("Out of support range")?
+    } else {
+        // [ケースA] 新規作成
+        // 基準となる週は、「今月（操作している月）の最初の週」とするのが自然だが、
+
+        let abs = calculate_abs_week(year, month, 1).unwrap_or(0);
+        // カレンダー作成
+        repo.calendar.create_calendar(plan_id, abs, 0).await?;
+
+        abs
+    };
+
+    // 3. statuses (Vec<Option<i64>>) の構築
+    // skips: true -> None (Skipped)
+    // skips: false -> Some(default_rule_id) (Active)
+    let statuses: Vec<Option<i64>> = skips.iter().map(|&is_skip| {
+        if is_skip {
+            None
+        } else {
+            Some(default_rule_id)
+        }
+    }).collect();
+
+    if statuses.is_empty() {
+        return Ok(()); // 保存するものがない
+    }
+
+    // 4. 保存
+    repo.calendar.try_to_append_timeline(plan_id, start_week_abs, statuses).await?;
+
+    Ok(())
 }
 
 use crate::application::dto::{MonthlyShiftResult, WeeklyShiftDto, DailyShiftDto};

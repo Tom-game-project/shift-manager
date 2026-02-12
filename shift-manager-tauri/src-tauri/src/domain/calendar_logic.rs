@@ -37,54 +37,6 @@ impl ShiftCalendarManager {
             Ok(abs_week - self.base_abs_week)
         }
     }
-
-    /// 【重要】指定した絶対週以降をすべて削除する（Truncate）
-    /// 配列を短くするだけなので極めて高速かつ安全
-    pub fn truncate_from(&mut self, target_abs_week: AbsWeek) {
-        if target_abs_week < self.base_abs_week {
-            // 開始地点より前を指定されたら全消し
-            self.timeline.clear();
-            // 必要なら start_abs_week 自体を書き換えるロジックも検討
-            return;
-        }
-
-        let keep_len = (target_abs_week - self.base_abs_week) as usize;
-        if keep_len < self.timeline.len() {
-            self.timeline.truncate(keep_len);
-        }
-    }
-
-    /// シフトの導出
-    /// base_abs_weekを下回る場合でも返せる場合があるが
-    /// skipを使うことで週の途中からルールを開始することは可能なので対応しない
-    pub fn derive_shift<'a>(
-        &self,
-        rule_map: &HashMap<RuleId, WeekRuleTable<'a, Incomplete>>, // ID -> Rule
-        staff_group_list: &'a StaffGroupList,
-        gen_week_abs: AbsWeek,  // 生成の始点となる絶対週
-        gen_range: usize,       // 何週間分のシフトを作成するか
-    ) -> Vec<Option<WeekDecidedShift<'a>>>{
-        if let Ok(index) = self.abs_to_index(gen_week_abs) {
-            if index + gen_range < self.timeline.len() {
-                calculate_partial_shift(
-    &self.timeline[
-                        index..index + gen_range
-                    ], rule_map, staff_group_list
-                )
-            } else if index < self.timeline.len() {
-                calculate_partial_shift(
-                    &self.timeline[
-                    index..
-                ], 
-                rule_map,
-                staff_group_list)
-            } else {
-                Vec::new()
-            }
-        } else {
-            Vec::new()
-        }
-    }
 }
 
 use std::collections::HashMap;

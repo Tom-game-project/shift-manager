@@ -52,16 +52,13 @@ export interface PlanConfig {
 export type WeekState = 'pending_active' | 'pending_skip' | 'fixed_active' | 'fixed_skip';
 
 // カレンダー状態 (Rust Enum -> TS Tagged Union)
-export type WeekStatus =
-  | { type: "active", content: { logical_delta: number, rule_id: number } }
-  | { type: "skipped", content: null };
+
 
 export interface ShiftCalendarManager {
   id?: number;
   planId: number;
   baseAbsWeek: number;
   initialDelta: number;
-  timeline: WeekStatus[];
 }
 
 // 決定したシフトの型
