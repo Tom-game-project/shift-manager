@@ -54,6 +54,9 @@ pub fn calculate_partial_shift<'a>(
     timeline_slice
         .iter().map(|i|{
             if let WeekStatus::Active { logical_delta , rule_id} = i {
+                // println!("{:?}", rule_map.get(rule_id).unwrap().0.len());
+                // println!("{:#?}", rule_map.get(rule_id));
+
                 rule_map
                     .get(rule_id)
                     .map(|week_rule_table| 
