@@ -8,7 +8,9 @@ export function renderConfigUI(
     onReload: () => Promise<void>
 ) {
     renderGroups(config.groups, onReload);
+    renderGroups(config.groups, onReload);
     renderRules(config, onReload); // pass full config for group lookups
+    renderCalendarSettings(config.plan.id);
 
     const jsonEl = document.getElementById('json-output');
     if (jsonEl) jsonEl.textContent = JSON.stringify(config, null, 2);
@@ -334,4 +336,81 @@ function renderRules(config: PlanConfig, onReload: () => Promise<void>) {
         div.appendChild(gridDiv);
         container.appendChild(div);
     });
+}
+
+async function renderCalendarSettings(planId: number) {
+    const container = document.getElementById('calendar-settings-container');
+    if (!container) return;
+    container.innerHTML = 'Loading settings...';
+
+    try {
+        const calendarState = await api.getCalendarState(planId);
+        container.innerHTML = '';
+
+        if (!calendarState) {
+            container.innerHTML = '<div style="color:#888; font-style:italic;">No calendar initialized for this plan yet.</div>';
+            return;
+        }
+
+        const div = document.createElement('div');
+        div.style.background = '#fff';
+        div.style.padding = '15px';
+        div.style.borderRadius = '8px';
+        div.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+        div.style.marginBottom = '20px';
+
+        div.innerHTML = `
+            <h4 style="margin-top:0; margin-bottom:10px;">Calendar Settings</h4>
+            <div style="margin-bottom: 10px;">
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">Initial Logical Delta</label>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="number" id="initial-delta-input" value="${calendarState.initialDelta}" style="padding:5px; border:1px solid #ccc; border-radius:4px; width:100px;">
+                    <button id="save-delta-btn" class="btn-sm btn-outline">Update</button>
+                    <span id="save-msg" style="font-size:0.9em; color:green; display:none;">Saved!</span>
+                </div>
+                <p style="font-size:0.8em; color:#666; margin-top:5px;">
+                    Adjust the starting rotation of the shift sequence. 
+                    Changing this will affect the entire shift pattern generation.
+                </p>
+            </div>
+            <div style="font-size:0.8em; color:#999;">
+                Base Week: ${calendarState.baseAbsWeek}
+            </div>
+        `;
+
+        container.appendChild(div);
+
+        const btn = document.getElementById('save-delta-btn');
+        const input = document.getElementById('initial-delta-input') as HTMLInputElement;
+        const msg = document.getElementById('save-msg');
+
+        if (btn && input) {
+            btn.onclick = async () => {
+                const val = parseInt(input.value);
+                if (isNaN(val) || val < 0) {
+                    alert("Please enter a valid non-negative number.");
+                    return;
+                }
+
+                try {
+                    btn.textContent = "Saving...";
+                    (btn as HTMLButtonElement).disabled = true;
+                    await api.updateInitialDelta(planId, val);
+
+                    if (msg) {
+                        msg.style.display = 'inline';
+                        setTimeout(() => { msg.style.display = 'none'; }, 2000);
+                    }
+                } catch (e) {
+                    alert(`Failed to update settings: ${e}`);
+                } finally {
+                    btn.textContent = "Update";
+                    (btn as HTMLButtonElement).disabled = false;
+                }
+            };
+        }
+
+    } catch (e) {
+        container.innerHTML = `<div style="color:red;">Failed to load calendar settings: ${e}</div>`;
+    }
 }

@@ -111,6 +111,16 @@ pub async fn append_timeline(
 }
 
 #[tauri::command]
+pub async fn update_initial_delta(
+    plan_id: i64,
+    initial_delta: usize,
+    repo: State<'_, AppServices>
+) -> Result<(), String> {
+    repo.calendar.update_initial_delta(plan_id, initial_delta).await
+}
+
+
+#[tauri::command]
 pub async fn generate_and_save_shift(
     plan_id: i64, 
     skips: Vec<bool>, 
@@ -206,7 +216,6 @@ fn db2rule_domain<'a>(
 
     let mut week_table = WeekRuleTable::new();
     for rule_row in &plan_config.rules {
-        // let rule_id = rule_row.rule.id;
 
         let mut days:[DayRule<'_, Incomplete>; 7] = core::array::from_fn(|_| DayRule {
             shift_morning: Vec::new(),
@@ -282,6 +291,12 @@ pub async fn derive_monthly_shift(
     //    (本来はRepositoryにこの変換ロジックを持たせるのが綺麗ですが、ここでやります)
     let plan_config = repo.rule.get_plan_config(plan_id).await?;
 
+    let shift_calendar_manager = if let Some(r) = repo.calendar.find_by_plan_id(plan_id).await? {
+        r
+    } else {
+        return Err("No Error Manager does not found.".to_string());
+    };
+
     let start_week_abs = if let Some (week_abs) = calculate_abs_week(target_year, target_month, 1) {
         week_abs
     } else {
@@ -309,7 +324,12 @@ pub async fn derive_monthly_shift(
     let rule_dict = db2rule_domain(&plan_config, &group_id_map);
 
     // 3. コアロジック実行
-    let partial_shift = calculate_partial_shift(&week_status_list, &rule_dict, &domain_groups);
+    let partial_shift = calculate_partial_shift(
+        shift_calendar_manager.initial_delta,
+        &week_status_list,
+        &rule_dict,
+        &domain_groups,
+    );
 
     let dto_weeks: Vec<Option<WeeklyShiftDto>> = partial_shift
         .into_iter()

@@ -30,5 +30,6 @@ export const api = {
     generateAndSaveShift: (planId: number, skips: boolean[], year: number, month: number) => invoke("generate_and_save_shift", { planId, skips, year, month }),
     deriveMonthlyShift: (planId: number, targetYear: number, targetMonth: number) =>
         invoke<MonthlyShiftResult>("derive_monthly_shift", { planId, targetYear, targetMonth }),
-    getCalendarState: (planId: number) => invoke<ShiftCalendarManager>("get_calendar_state", { planId }),
+    getCalendarState: (plan_id: number) => invoke<ShiftCalendarManager>("get_calendar_state", { planId: plan_id }),
+    updateInitialDelta: (planId: number, initialDelta: number) => invoke("update_initial_delta", { planId, initialDelta }),
 };

@@ -122,6 +122,21 @@ impl CalendarRepository {
         Ok(new_calendar_id)
     }
 
+    pub async fn update_initial_delta(
+        &self,
+        plan_id: i64,
+        initial_delta: usize,
+    ) -> Result<(), String> {
+        sqlx::query("UPDATE shift_calendars SET initial_delta = ? WHERE plan_id = ?")
+            .bind(initial_delta as i64)
+            .bind(plan_id)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+
     pub async fn try_to_append_timeline(
         &self,
         plan_id: i64,

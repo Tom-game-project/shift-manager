@@ -114,6 +114,7 @@ pub fn run() {
             application::commands::get_calendar_state,
             application::commands::derive_monthly_shift,
             application::commands::generate_and_save_shift,
+            application::commands::update_initial_delta,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
