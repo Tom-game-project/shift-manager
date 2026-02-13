@@ -202,10 +202,9 @@ fn db2staff_group_domain(plan_config: &PlanConfig) -> (StaffGroupList, HashMap<i
 fn db2rule_domain<'a>(
     plan_config: &PlanConfig,
     group_id_map: &HashMap<i64, usize>
-) -> HashMap<i64, WeekRuleTable<'a, Incomplete>> {
-    let mut rule_dict: HashMap<i64, WeekRuleTable<'_, Incomplete>> = HashMap::new();
+) -> WeekRuleTable<'a, Incomplete> {
 
-        let mut week_table = WeekRuleTable::new();
+    let mut week_table = WeekRuleTable::new();
     for rule_row in &plan_config.rules {
         // let rule_id = rule_row.rule.id;
 
@@ -215,7 +214,6 @@ fn db2rule_domain<'a>(
         });
 
         for assign in &rule_row.assignments {
-
             let week_day = assign.weekday;
             let shift_time = assign.shift_time_type;
 
@@ -252,8 +250,7 @@ fn db2rule_domain<'a>(
         }
         week_table.add_week_rule(WeekRule(days));
     }
-    rule_dict.insert(plan_config.plan.id, week_table);
-    rule_dict
+    week_table
 }
 
 /// 週ごとのシフト導出計算をします
@@ -305,8 +302,9 @@ pub async fn derive_monthly_shift(
     // 1. DBからドメインへの変換と、IDマップの取得
     let (domain_groups, group_id_map) = db2staff_group_domain(&plan_config); 
 
-    println!("{} ", plan_id);
-    println!("{:#?} ", plan_config);
+    // println!("{} ", plan_id);
+    println!("plan_config: {:#?} ", plan_config);
+
     // 2. マップを使ってルールを変換
     let rule_dict = db2rule_domain(&plan_config, &group_id_map);
 

@@ -41,6 +41,37 @@ impl ShiftCalendarManager {
 
 use std::collections::HashMap;
 
+// 指定された期間のシフトのみを計算する純粋関数
+//
+// - `timeline_slice`: 計算対象の週のステータス（例: 4週間分だけ）
+// - `rule_map`: rule_id から 実際のWeekRule へのマップ (必要な分だけ)
+// - `staff_groups`: スタッフリスト (これはサイズが小さいので全件でもOKだが、最適化も可能)
+// pub fn calculate_partial_shift<'a>(
+//     timeline_slice: &[WeekStatus],
+//     rule_map: &HashMap<RuleId, WeekRuleTable<'a, Incomplete>>, // ID -> Rule
+//     staff_group_list: &'a StaffGroupList,
+// ) -> Vec<Option<WeekDecidedShift<'a>>> {
+//     timeline_slice
+//         .iter().map(|i|{
+//             if let WeekStatus::Active { logical_delta , rule_id} = i {
+//                 // println!("{:?}", rule_map.get(rule_id).unwrap().0.len());
+//                 println!("rule id {}, {:#?}", rule_id, rule_map.get(rule_id));
+// 
+//                 rule_map
+//                     .get(rule_id)
+//                     .map(|week_rule_table| 
+//                         gen_one_week_shift(
+//                             week_rule_table, 
+//                             staff_group_list,
+//                             *logical_delta
+//                         )
+//                     )
+//             } else {
+//                 None
+//             }
+//         }).collect()
+// }
+
 /// 指定された期間のシフトのみを計算する純粋関数
 ///
 /// - `timeline_slice`: 計算対象の週のステータス（例: 4週間分だけ）
@@ -48,24 +79,18 @@ use std::collections::HashMap;
 /// - `staff_groups`: スタッフリスト (これはサイズが小さいので全件でもOKだが、最適化も可能)
 pub fn calculate_partial_shift<'a>(
     timeline_slice: &[WeekStatus],
-    rule_map: &HashMap<RuleId, WeekRuleTable<'a, Incomplete>>, // ID -> Rule
+    rule_map: &WeekRuleTable<'a, Incomplete>, // ID -> Rule
     staff_group_list: &'a StaffGroupList,
 ) -> Vec<Option<WeekDecidedShift<'a>>> {
     timeline_slice
         .iter().map(|i|{
             if let WeekStatus::Active { logical_delta , rule_id} = i {
-                // println!("{:?}", rule_map.get(rule_id).unwrap().0.len());
-                // println!("{:#?}", rule_map.get(rule_id));
 
-                rule_map
-                    .get(rule_id)
-                    .map(|week_rule_table| 
-                        gen_one_week_shift(
-                            week_rule_table, 
-                            staff_group_list,
-                            *logical_delta
-                        )
-                    )
+                Some(gen_one_week_shift(
+                    &rule_map, 
+                    staff_group_list,
+                    *logical_delta
+                ))
             } else {
                 None
             }
