@@ -13,10 +13,16 @@ pub struct WeeklyShiftDto {
     pub days: Vec<DailyShiftDto>, // 0(Mon) ~ 6(Sun)
 }
 
+/// 1週間分のシフト情報（ステータス付き）
+#[derive(Debug, Serialize)]
+pub struct WeeklyShiftInfo {
+    pub status: String, // "Pending", "Active", "Skipped"
+    pub shift: Option<WeeklyShiftDto>,
+}
+
 /// コマンドの返り値
 #[derive(Debug, Serialize)]
 pub struct MonthlyShiftResult {
     // フロントエンドのカレンダー週順 (0, 1, 2...) に対応するデータ
-    // None = その週はスキップ、または未生成
-    pub weeks: Vec<Option<WeeklyShiftDto>>,
+    pub weeks: Vec<WeeklyShiftInfo>,
 }

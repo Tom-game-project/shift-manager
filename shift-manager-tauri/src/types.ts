@@ -71,6 +71,11 @@ export interface WeeklyShiftDto {
   days: DailyShiftDto[];
 }
 
+export interface WeeklyShiftInfo {
+  status: 'Pending' | 'Active' | 'Skipped';
+  shift?: WeeklyShiftDto;
+}
+
 export interface MonthlyShiftResult {
-  weeks: (WeeklyShiftDto | null)[];
+  weeks: WeeklyShiftInfo[];
 }

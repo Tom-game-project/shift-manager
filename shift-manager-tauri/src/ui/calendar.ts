@@ -35,12 +35,18 @@ export async function renderCalendarView(
 
     weeksData.forEach((week, i) => {
         const weekKey = week.days[0].toISOString().split('T')[0];
-        let state: WeekState = 'pending_active';
 
-        if (pendingSkips[weekKey] === true) {
-            state = 'pending_skip';
-        } else {
-            state = 'pending_active';
+        // Default state from pending map
+        let state: WeekState = pendingSkips[weekKey] ? 'pending_skip' : 'pending_active';
+
+        // Override state if data is fixed in DB
+        const weekInfo = shiftData?.weeks?.[i];
+        if (weekInfo) {
+            if (weekInfo.status === 'Active') {
+                state = 'fixed_active';
+            } else if (weekInfo.status === 'Skipped') {
+                state = 'fixed_skip';
+            }
         }
 
         const row = document.createElement('div');
@@ -55,32 +61,46 @@ export async function renderCalendarView(
 
         const input = document.createElement('input');
         input.type = 'checkbox';
+        input.disabled = state.startsWith('fixed_'); // Disable if fixed
 
         switch (state) {
             case 'pending_active':
+            case 'fixed_active':
                 input.checked = false;
-                input.disabled = false;
                 break;
             case 'pending_skip':
+            case 'fixed_skip':
                 input.checked = true;
-                input.disabled = false;
                 break;
-
         }
 
         input.onchange = (e) => {
+            if (state.startsWith('fixed_')) return; // Should be disabled, but extra safety
             const isChecked = (e.target as HTMLInputElement).checked;
             pendingSkips[weekKey] = isChecked;
 
             const textEl = controlCell.querySelector('.status-text') as HTMLElement;
             if (textEl) {
-                textEl.textContent = isChecked ? "SKIP" : "ACTIVE";
+                // Determine text based on checkbox state for pending items
+                const newStateStr = isChecked ? "SKIP" : "ACTIVE";
+                textEl.textContent = newStateStr;
                 textEl.className = `status-text ${isChecked ? 'text-skip' : 'text-active'}`;
+            }
+
+            // Also update slider class
+            const sliderEl = switchLabel.querySelector('.slider');
+            if (sliderEl) {
+                sliderEl.className = `slider ${isChecked ? 'pending-skip' : 'pending-active'}`;
             }
         };
 
         const slider = document.createElement('span');
-        const sliderClass = state === 'pending_active' ? 'pending-active' : 'pending-skip'; // simplified since fix is gone
+        let sliderClass = '';
+        if (state === 'pending_active') sliderClass = 'pending-active';
+        else if (state === 'pending_skip') sliderClass = 'pending-skip';
+        else if (state === 'fixed_active') sliderClass = 'fixed-active';
+        else if (state === 'fixed_skip') sliderClass = 'fixed-skip';
+
         slider.className = `slider ${sliderClass}`;
 
         switchLabel.appendChild(input);
@@ -102,7 +122,14 @@ export async function renderCalendarView(
                 labelText = "SKIP";
                 labelColorClass = "text-skip";
                 break;
-
+            case 'fixed_active':
+                labelText = "ACTIVE (FIXED)";
+                labelColorClass = "text-fixed-active";
+                break;
+            case 'fixed_skip':
+                labelText = "SKIPPED (FIXED)";
+                labelColorClass = "text-fixed-skip";
+                break;
         }
 
         statusText.classList.add(labelColorClass);
@@ -124,9 +151,9 @@ export async function renderCalendarView(
                 cell.style.opacity = '0.3';
             }
 
-            const weekShift = shiftData?.weeks?.[i];
-            if (weekShift) {
-                const dailyShift = weekShift.days[dayIndex];
+            const weekInfo = shiftData?.weeks?.[i];
+            if (weekInfo && weekInfo.shift) {
+                const dailyShift = weekInfo.shift.days[dayIndex];
                 if (dailyShift) {
                     if (dailyShift.morning && dailyShift.morning.length > 0) {
                         const mBadge = document.createElement('div');

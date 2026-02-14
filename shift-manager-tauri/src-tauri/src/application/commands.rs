@@ -190,7 +190,7 @@ pub async fn generate_and_save_shift(
     Ok(())
 }
 
-use crate::application::dto::{MonthlyShiftResult, WeeklyShiftDto, DailyShiftDto};
+use crate::application::dto::{MonthlyShiftResult, WeeklyShiftDto, DailyShiftDto, WeeklyShiftInfo};
 
 use shift_calendar::shift_gen::{DayRule, Incomplete, ShiftHoll, StaffGroup, StaffGroupList, WeekRule, WeekRuleTable};
 
@@ -331,7 +331,7 @@ pub async fn derive_monthly_shift(
     let (domain_groups, group_id_map) = db2staff_group_domain(&plan_config); 
 
     // println!("{} ", plan_id);
-    println!("plan_config: {:#?} ", plan_config);
+    // println!("plan_config: {:#?} ", plan_config);
 
     // 2. マップを使ってルールを変換
     let rule_dict = db2rule_domain(&plan_config, &group_id_map);
@@ -344,28 +344,56 @@ pub async fn derive_monthly_shift(
         &domain_groups,
     );
 
-    let dto_weeks: Vec<Option<WeeklyShiftDto>> = partial_shift
-        .into_iter()
-        .map(|week_opt| {
-            // 週データが存在する(Some)場合だけ、中身を変換する
-            week_opt.map(|week| {
+    let mut result_weeks: Vec<WeeklyShiftInfo> = Vec::new();
 
-                // 1週間分(7日)のデータをループして DailyShiftDto の Vec を作る
-                let days_dto: Vec<DailyShiftDto> = week.0
-                    .into_iter()
-                    .map(|day| DailyShiftDto {
-                        morning: day.shift_morning.iter().map(|t| t.name.clone()).collect(),
-                        afternoon: day.shift_afternoon.iter().map(|t| t.name.clone()).collect(),
-                    })
-                    .collect();
+    // partial_shift (Vec<Option<WeekShift>>) は、week_status_list と 1:1 で対応しているはず
+    // ただし、week_status_list は "DBにある分だけ" なので、
+    // range (カレンダー表示週数) 分だけループを回して、足りない分は Pending とする
 
-                // WeeklyShiftDto に詰める
-                WeeklyShiftDto { days: days_dto }
-            })
-        })
-        .collect();
+    let mut shift_iter = partial_shift.into_iter();
+    let mut status_iter = week_status_list.iter();
 
-    Ok(MonthlyShiftResult { weeks: dto_weeks })
+    for _ in 0..range {
+        // DB上のステータスがあるか？
+        if let Some(status_row) = status_iter.next() {
+            // 計算結果（シフト）を取り出す
+            let shift_opt = shift_iter.next().unwrap_or(None);
+
+            let (status_str, shift_dto) = match status_row {
+                WeekStatus::Active { .. } => {
+                    // Activeならシフトがあるはず
+                    let dto = shift_opt.map(|week| {
+                        let days_dto: Vec<DailyShiftDto> = week.0
+                            .into_iter()
+                            .map(|day| DailyShiftDto {
+                                morning: day.shift_morning.iter().map(|t| t.name.clone()).collect(),
+                                afternoon: day.shift_afternoon.iter().map(|t| t.name.clone()).collect(),
+                            })
+                            .collect();
+                        WeeklyShiftDto { days: days_dto }
+                    });
+                    ("Active", dto)
+                },
+                WeekStatus::Skipped => {
+                    ("Skipped", None)
+                }
+            };
+
+            result_weeks.push(WeeklyShiftInfo {
+                status: status_str.to_string(),
+                shift: shift_dto,
+            });
+
+        } else {
+            // DBにないので Pending
+            result_weeks.push(WeeklyShiftInfo {
+                status: "Pending".to_string(),
+                shift: None,
+            });
+        }
+    }
+
+    Ok(MonthlyShiftResult { weeks: result_weeks })
 }
 
 
