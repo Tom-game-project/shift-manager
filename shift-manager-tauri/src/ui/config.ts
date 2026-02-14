@@ -27,18 +27,15 @@ function renderGroups(groups: StaffGroupWithMembers[], onReload: () => Promise<v
 
         const div = document.createElement('div');
         div.className = 'group-card';
-        div.style.background = '#fff';
-        div.style.borderRadius = '6px';
-        div.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
         div.style.marginBottom = '15px';
-        div.style.overflow = 'hidden';
+        div.style.borderLeft = `5px solid ${color}`;
         div.style.borderLeft = `5px solid ${color}`;
 
         // Header
         const header = document.createElement('div');
         header.style.padding = '10px';
-        header.style.background = '#f8f9fa';
-        header.style.borderBottom = '1px solid #eee';
+        header.style.background = '#f8fafc';
+        header.style.borderBottom = '1px solid #e2e8f0';
         header.style.display = 'flex';
         header.style.justifyContent = 'space-between';
         header.style.alignItems = 'center';
@@ -168,11 +165,7 @@ function renderRules(config: PlanConfig, onReload: () => Promise<void>) {
     rules.forEach((r, rIdx) => {
         const div = document.createElement('div');
         div.className = 'rule-card';
-        div.style.border = '1px solid #ccc';
-        div.style.padding = '15px';
-        div.style.marginBottom = '15px';
-        div.style.background = '#fff';
-        div.style.borderRadius = '8px';
+        // Inline styles removed, handled by CSS class
 
         // Rule Header
         const header = document.createElement('div');
@@ -237,7 +230,7 @@ function renderRules(config: PlanConfig, onReload: () => Promise<void>) {
             timeLabel.textContent = shiftTime === 0 ? "AM" : "PM";
             timeLabel.style.fontWeight = "bold";
             timeLabel.style.padding = "8px";
-            timeLabel.style.color = shiftTime === 0 ? "#e67e22" : "#2980b9";
+            timeLabel.style.color = shiftTime === 0 ? "#dc2626" : "#2563eb"; // Red : Blue
             tr.appendChild(timeLabel);
 
             for (let weekday = 0; weekday < 7; weekday++) {
@@ -301,22 +294,11 @@ function renderRules(config: PlanConfig, onReload: () => Promise<void>) {
                 // I'll make the "Add" button look more like a "Hole" to fill.
 
                 const holeBtn = document.createElement('button');
-                holeBtn.className = "shift-hole-btn"; // I will add this class to styles.css or similar
-                // Inline style for now to make it look like a hole
+                holeBtn.className = "shift-hole-btn";
                 holeBtn.innerHTML = "<span style='font-size:1.2em; line-height:1;'>+</span>";
-                holeBtn.style.display = "block";
-                holeBtn.style.width = "100%";
-                holeBtn.style.padding = "4px";
-                holeBtn.style.border = "1px dashed #ccc";
-                holeBtn.style.borderRadius = "4px";
-                holeBtn.style.backgroundColor = "#fafafa";
-                holeBtn.style.color = "#aaa";
-                holeBtn.style.cursor = "pointer";
-                holeBtn.style.textAlign = "center";
                 holeBtn.title = "Click to assign staff (fill hole)";
 
-                holeBtn.onmouseover = () => { holeBtn.style.borderColor = "#999"; holeBtn.style.backgroundColor = "#eee"; };
-                holeBtn.onmouseout = () => { holeBtn.style.borderColor = "#ccc"; holeBtn.style.backgroundColor = "#fafafa"; };
+                // Hover effects handled by CSS
 
                 holeBtn.onclick = () => {
                     openAssignmentModal(r.rule.id, weekday, shiftTime, config.groups, async (rid, wd, st, gid, mid) => {

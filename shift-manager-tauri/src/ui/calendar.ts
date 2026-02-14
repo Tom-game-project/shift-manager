@@ -158,26 +158,15 @@ export async function renderCalendarView(
                     if (dailyShift.morning && dailyShift.morning.length > 0) {
                         const mBadge = document.createElement('div');
                         mBadge.className = 'shift-badge morning';
-                        mBadge.style.fontSize = '0.75em';
-                        mBadge.style.backgroundColor = 'var(--primary-soft)';
-                        mBadge.style.color = 'var(--primary-dark)';
-                        mBadge.style.padding = '2px 6px';
-                        mBadge.style.borderRadius = '12px';
-                        mBadge.style.marginBottom = '4px';
-                        mBadge.style.fontWeight = '500';
                         mBadge.textContent = `AM: ${dailyShift.morning.join(', ')}`;
+                        cell.appendChild(mBadge);
                         cell.appendChild(mBadge);
                     }
                     if (dailyShift.afternoon && dailyShift.afternoon.length > 0) {
                         const aBadge = document.createElement('div');
                         aBadge.className = 'shift-badge afternoon';
-                        aBadge.style.fontSize = '0.75em';
-                        aBadge.style.backgroundColor = 'hsl(340, 100%, 95%)';
-                        aBadge.style.color = 'hsl(340, 60%, 50%)';
-                        aBadge.style.padding = '2px 6px';
-                        aBadge.style.borderRadius = '12px';
-                        aBadge.style.fontWeight = '500';
                         aBadge.textContent = `PM: ${dailyShift.afternoon.join(', ')}`;
+                        cell.appendChild(aBadge);
                         cell.appendChild(aBadge);
                     }
                 }
