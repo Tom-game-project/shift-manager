@@ -192,17 +192,20 @@ function setupEventListeners() {
     if (addRuleBtn) {
         addRuleBtn.addEventListener('click', async () => {
             if (!currentPlanId) return;
-            openInputModal("Create New Rule", "New Rule", async (name) => {
-                if (!name) return;
-                try {
-                    await api.addWeeklyRule(currentPlanId!, name);
-                    setTimeout(async () => {
-                        await reloadConfig();
-                    }, 100);
-                } catch (e) {
-                    alert(`Failed to add rule: ${e}`);
-                }
-            });
+            // Auto-generate name based on current count
+            // Note: We might want to get the exact count from currentConfig.rules.length
+            // But main.ts has currentConfig.
+            const nextIndex = (currentConfig?.rules.length || 0) + 1;
+            const name = `Week ${nextIndex}`;
+
+            try {
+                await api.addWeeklyRule(currentPlanId!, name);
+                setTimeout(async () => {
+                    await reloadConfig();
+                }, 100);
+            } catch (e) {
+                alert(`Failed to add rule: ${e}`);
+            }
         });
     }
 

@@ -178,8 +178,7 @@ function renderRules(config: PlanConfig, onReload: () => Promise<void>) {
 
         header.innerHTML = `
             <div style="display:flex; align-items:center; gap:10px;">
-                <span style="background:#333; color:white; padding:2px 6px; border-radius:4px; font-size:0.8em;">#${rIdx + 1}</span>
-                <strong style="font-size:1.1em;">${r.rule.name}</strong>
+                <strong style="font-size:1.1em;">Week ${rIdx + 1}</strong>
             </div>
         `;
 
