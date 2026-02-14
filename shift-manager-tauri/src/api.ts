@@ -32,4 +32,5 @@ export const api = {
         invoke<MonthlyShiftResult>("derive_monthly_shift", { planId, targetYear, targetMonth }),
     getCalendarState: (plan_id: number) => invoke<ShiftCalendarManager>("get_calendar_state", { planId: plan_id }),
     updateInitialDelta: (planId: number, initialDelta: number) => invoke("update_initial_delta", { planId, initialDelta }),
+    deleteFutureShifts: (planId: number, year: number, month: number) => invoke("delete_future_shifts", { planId, year, month }),
 };

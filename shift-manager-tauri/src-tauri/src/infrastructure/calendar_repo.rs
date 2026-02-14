@@ -136,6 +136,40 @@ impl CalendarRepository {
         Ok(())
     }
 
+    pub async fn delete_future_shifts(
+        &self,
+        plan_id: i64,
+        start_abs_week: usize,
+    ) -> Result<(), String> {
+        let mut tx = self.pool.begin().await.map_err(|e| e.to_string())?;
+
+        // 1. カレンダー情報の取得
+        let cal_row = sqlx::query("SELECT id, base_abs_week FROM shift_calendars WHERE plan_id = ?")
+            .bind(plan_id)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let cal = cal_row.ok_or_else(|| format!("Plan ID: {} のカレンダーが存在しません。", plan_id))?;
+        let calendar_id: i64 = cal.get("id");
+        let base_abs_week: i64 = cal.get("base_abs_week");
+
+        // 2. 削除対象のオフセットを計算
+        let start_offset = (start_abs_week as i64) - base_abs_week;
+
+        // 3. 削除実行
+        sqlx::query("DELETE FROM weekly_statuses WHERE calendar_id = ? AND week_offset >= ?")
+            .bind(calendar_id)
+            .bind(start_offset)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        tx.commit().await.map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+
 
     pub async fn try_to_append_timeline(
         &self,

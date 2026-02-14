@@ -221,6 +221,26 @@ function setupEventListeners() {
 
     document.getElementById('generate-btn')?.addEventListener('click', handleGenerate);
 
+    document.getElementById('reset-btn')?.addEventListener('click', async () => {
+        if (!currentPlanId) {
+            alert("No plan selected");
+            return;
+        }
+
+        const monthLabel = document.getElementById('current-month-label')?.textContent;
+
+        if (confirm(`Are you sure you want to delete ALL shifts starting from ${monthLabel}? This cannot be undone.`)) {
+            try {
+                await api.deleteFutureShifts(currentPlanId, currentYear, currentMonth);
+                await renderCalendarViewWrapped();
+                alert("Future shifts deleted.");
+            } catch (e) {
+                alert(`Failed to delete shifts: ${e}`);
+            }
+        }
+    });
+
+
     // Modal
     document.getElementById('modal-cancel-btn')?.addEventListener('click', closeModal);
     document.getElementById('modal')?.addEventListener('click', (e) => {

@@ -119,6 +119,19 @@ pub async fn update_initial_delta(
     repo.calendar.update_initial_delta(plan_id, initial_delta).await
 }
 
+#[tauri::command]
+pub async fn delete_future_shifts(
+    plan_id: i64,
+    year: i32,
+    month: u32,
+    repo: State<'_, AppServices>
+) -> Result<(), String> {
+    // 指定された月(の1週目)から削除を開始する
+    let start_week_abs = calculate_abs_week(year, month, 1).ok_or("Invalid date")?;
+    repo.calendar.delete_future_shifts(plan_id, start_week_abs).await
+}
+
+
 
 #[tauri::command]
 pub async fn generate_and_save_shift(
