@@ -1,0 +1,52 @@
+name: 'publish-windows'
+
+on:
+  push:
+    tags:
+      - 'v*' # v1.0.0などのタグで起動
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          # package-lock.json の場所を教える
+          cache-dependency-path: './shift-manager-tauri/package-lock.json' 
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          # Cargo.toml がある場所を指定する
+          workspaces: './shift-manager-tauri/src-tauri -> target'
+
+      - name: install frontend dependencies
+        # npm install を実行するディレクトリを指定
+        working-directory: ./shift-manager-tauri
+        run: npm install
+
+      - name: Build and Publish Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # tauri-action にプロジェクトのルートディレクトリを教える
+          projectPath: './shift-manager-tauri'
+          tagName: v__VERSION__
+          releaseName: 'App v__VERSION__'
+          releaseBody: 'Windows release for the application.'
+          releaseDraft: true
+          prerelease: false
