@@ -1,9 +1,9 @@
-use serde::{Serialize};
+use serde::Serialize;
 //
 // Rules
 //
 
-use sqlx::{FromRow, prelude::Type};
+use sqlx::{prelude::Type, FromRow};
 
 // --- 1. Plan (設定セット/親) ---
 #[derive(Debug, Serialize, FromRow)]
@@ -86,7 +86,7 @@ pub struct RuleAssignment {
 
     // インデックスや順序を表す場合は usize にしておくのがRustの定石
     #[sqlx(try_from = "i64")]
-    pub target_member_index: usize, 
+    pub target_member_index: usize,
 }
 
 // --- 複合データ (フロントエンドに一括で返す用) ---

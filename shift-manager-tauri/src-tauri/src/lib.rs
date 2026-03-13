@@ -1,21 +1,16 @@
-use sqlx::{ 
-    sqlite::{
-        SqlitePoolOptions,
-        SqliteConnectOptions
-    },
-};
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 
 use std::fs;
 
 use tauri::Manager;
 
+pub mod application;
 pub mod domain;
 pub mod infrastructure;
-pub mod application;
 
-use sqlx::SqlitePool;
 use infrastructure::calendar_repo::CalendarRepository;
 use infrastructure::rule_repo::RuleRepository;
+use sqlx::SqlitePool;
 
 // 全てのリポジトリを保持するコンテナ
 pub struct AppServices {
@@ -50,6 +45,7 @@ fn greet(name: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             tauri::async_runtime::block_on(async {
                 // --- app_data_dir を取得 ---
@@ -59,8 +55,7 @@ pub fn run() {
                     .expect("failed to get app data dir");
 
                 // --- ディレクトリ作成（冪等） ---
-                fs::create_dir_all(&app_data_dir)
-                    .expect("failed to create app data dir");
+                fs::create_dir_all(&app_data_dir).expect("failed to create app data dir");
 
                 // --- DB パス生成 ---
                 let db_path = app_data_dir.join("app.db");
@@ -120,4 +115,3 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-

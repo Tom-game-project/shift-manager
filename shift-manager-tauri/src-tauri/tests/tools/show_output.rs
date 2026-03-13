@@ -2,14 +2,20 @@ use shift_manager_tauri_lib::application::dto::MonthlyShiftResult;
 
 pub fn show_monthly_shift_result_debug_data(monthly_shift_result: &MonthlyShiftResult) {
     println!("\n=======================================================");
-    println!("🗓️ [DEBUG] シフト出力結果 (計 {} 週間)", monthly_shift_result.weeks.len());
+    println!(
+        "🗓️ [DEBUG] シフト出力結果 (計 {} 週間)",
+        monthly_shift_result.weeks.len()
+    );
     println!("=======================================================");
 
     // 曜日の表示用ラベル (0=Mon ~ 6=Sun に対応)
     let day_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
     for (week_idx, week_opt) in monthly_shift_result.weeks.iter().enumerate() {
-        println!("📅 [Week {}] ------------------------------------------", week_idx + 1);
+        println!(
+            "📅 [Week {}] ------------------------------------------",
+            week_idx + 1
+        );
 
         match week_opt {
             Some(week) => {
@@ -30,7 +36,7 @@ pub fn show_monthly_shift_result_debug_data(monthly_shift_result: &MonthlyShiftR
                     };
 
                     println!(
-                        "   {} : [午前] {:<15} | [午後] {}", 
+                        "   {} : [午前] {:<15} | [午後] {}",
                         label, morning_str, afternoon_str
                     );
                 }
@@ -42,7 +48,6 @@ pub fn show_monthly_shift_result_debug_data(monthly_shift_result: &MonthlyShiftR
     }
     println!("=======================================================\n");
 }
-
 
 use shift_manager_tauri_lib::domain::rule_model::PlanConfig;
 
@@ -60,10 +65,14 @@ pub fn show_plan_config_debug_data(config: &PlanConfig) {
     for rule in &config.rules {
         println!("📅 ルール: {} (ID: {})", rule.rule.name, rule.rule.id);
         for assign in &rule.assignments {
-            println!("   ┣ アサイン: 曜日[{:?}] 時間[{:?}] -> グループID[{}]のメンバー[{}]",
-                assign.weekday, assign.shift_time_type, assign.target_group_id, assign.target_member_index);
+            println!(
+                "   ┣ アサイン: 曜日[{:?}] 時間[{:?}] -> グループID[{}]のメンバー[{}]",
+                assign.weekday,
+                assign.shift_time_type,
+                assign.target_group_id,
+                assign.target_member_index
+            );
         }
     }
     println!("=======================================================\n");
-
 }

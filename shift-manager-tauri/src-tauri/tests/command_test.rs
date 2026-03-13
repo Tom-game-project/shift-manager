@@ -4,7 +4,7 @@ mod tools;
 mod command_tests {
     use shift_manager_tauri_lib::application::time::calculate_abs_week;
     use sqlx::sqlite::SqlitePoolOptions;
-    use sqlx::{SqlitePool};
+    use sqlx::SqlitePool;
     use tauri::Manager;
 
     use shift_manager_tauri_lib::{
@@ -17,7 +17,7 @@ mod command_tests {
         //     rule_repo::RuleRepository,
         // },
         application::commands::*,
-        AppServices
+        AppServices,
     };
 
     use crate::tools;
@@ -58,20 +58,22 @@ mod command_tests {
         assert!(plan_id > 0);
 
         // 3. [コマンド実行] スタッフグループとメンバーの作成
-        let group_id = add_staff_group(plan_id, "正社員".to_string(), state.clone()).await.unwrap();
-        let member1_id = add_staff_member(group_id, "田中".to_string(), state.clone()).await.unwrap();
-        let member2_id = add_staff_member(group_id, "佐藤".to_string(), state.clone()).await.unwrap();
+        let group_id = add_staff_group(plan_id, "正社員".to_string(), state.clone())
+            .await
+            .unwrap();
+        let member1_id = add_staff_member(group_id, "田中".to_string(), state.clone())
+            .await
+            .unwrap();
+        let member2_id = add_staff_member(group_id, "佐藤".to_string(), state.clone())
+            .await
+            .unwrap();
 
         // 4. [コマンド実行] ルールとアサインの作成
-        let rule_id = add_weekly_rule(plan_id, "標準ルール".to_string(), state.clone()).await.unwrap();
+        let rule_id = add_weekly_rule(plan_id, "標準ルール".to_string(), state.clone())
+            .await
+            .unwrap();
         // 月曜日(1) の 午前(0) に グループ(group_id) の 0番目の人 をアサイン
-        let _assign_id = add_rule_assignment(
-            rule_id,
-            0,
-            0,
-            group_id,
-            0,
-            state.clone())
+        let _assign_id = add_rule_assignment(rule_id, 0, 0, group_id, 0, state.clone())
             .await
             .unwrap();
 
@@ -95,15 +97,21 @@ mod command_tests {
 
         // 6. [コマンド実行] カレンダー作成とタイムラインの追記
         // base=2920 からスタート
-        create_calendar(plan_id, 2920, 0, state.clone()).await.unwrap();
+        create_calendar(plan_id, 2920, 0, state.clone())
+            .await
+            .unwrap();
 
         // 2920週から 3週間分のルールをセット (Active, Active, Skipped)
         let timeline_data = vec![Some(rule_id), Some(rule_id), None];
-        append_timeline(plan_id, 2920, timeline_data, state.clone()).await.unwrap();
+        append_timeline(plan_id, 2920, timeline_data, state.clone())
+            .await
+            .unwrap();
 
         // 7. [コマンド実行] シフトの導出テスト (現状はダミーデータが返るか確認)
         // 2026年 1月のシフトをリクエスト
-        let monthly_shift = derive_monthly_shift(plan_id, 2026, 0, state.clone()).await.unwrap();
+        let monthly_shift = derive_monthly_shift(plan_id, 2026, 0, state.clone())
+            .await
+            .unwrap();
 
         // 検証: ダミーデータとして 6週間分 返ってくること
         assert_eq!(monthly_shift.weeks.len(), 6);
@@ -124,11 +132,21 @@ mod command_tests {
         // 1〜4. データ作成 (省略・前回のコードと同じ)
         let plan_name = "2026年 シフト計画".to_string();
         let plan_id = create_new_plan(plan_name, state.clone()).await.unwrap();
-        let group_id = add_staff_group(plan_id, "正社員".to_string(), state.clone()).await.unwrap();
-        let member1_id = add_staff_member(group_id, "田中".to_string(), state.clone()).await.unwrap();
-        let member2_id = add_staff_member(group_id, "佐藤".to_string(), state.clone()).await.unwrap();
-        let rule_id = add_weekly_rule(plan_id, "標準ルール".to_string(), state.clone()).await.unwrap();
-        let _assign_id = add_rule_assignment(rule_id, 1, 0, group_id, 0, state.clone()).await.unwrap();
+        let group_id = add_staff_group(plan_id, "正社員".to_string(), state.clone())
+            .await
+            .unwrap();
+        let member1_id = add_staff_member(group_id, "田中".to_string(), state.clone())
+            .await
+            .unwrap();
+        let member2_id = add_staff_member(group_id, "佐藤".to_string(), state.clone())
+            .await
+            .unwrap();
+        let rule_id = add_weekly_rule(plan_id, "標準ルール".to_string(), state.clone())
+            .await
+            .unwrap();
+        let _assign_id = add_rule_assignment(rule_id, 1, 0, group_id, 0, state.clone())
+            .await
+            .unwrap();
 
         // =================================================================
         // ★ 追加1：ルール設定のわかりやすいデバッグ表示
@@ -140,13 +158,16 @@ mod command_tests {
         // アサーション (前回のまま)
         assert_eq!(config.groups[0].members[0].id, member1_id);
 
-
-        let abs_week = calculate_abs_week(2026, 0, 1) .unwrap();
+        let abs_week = calculate_abs_week(2026, 0, 1).unwrap();
 
         // 6. カレンダー作成とタイムライン追記 (前回のまま)
-        create_calendar(plan_id, abs_week, 0, state.clone()).await.unwrap();
+        create_calendar(plan_id, abs_week, 0, state.clone())
+            .await
+            .unwrap();
         let timeline_data = vec![Some(rule_id), Some(rule_id), None];
-        append_timeline(plan_id, abs_week, timeline_data, state.clone()).await.unwrap();
+        append_timeline(plan_id, abs_week, timeline_data, state.clone())
+            .await
+            .unwrap();
 
         // =================================================================
         // ★ 追加2：タイムラインのデバッグ表示（Repositoryのメソッドを直接呼ぶ）
@@ -154,11 +175,7 @@ mod command_tests {
         let _ = state.calendar.debug_print_timeline(plan_id).await;
 
         // 7. シフト導出テスト (前回のまま)
-        let monthly_shift = derive_monthly_shift(
-            plan_id, 
-            2026,
-            0, 
-            state.clone())
+        let monthly_shift = derive_monthly_shift(plan_id, 2026, 0, state.clone())
             .await
             .unwrap();
 

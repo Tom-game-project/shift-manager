@@ -3,7 +3,7 @@ use serde::Serialize;
 /// 1日分の確定シフト (フロントエンド表示用)
 #[derive(Debug, Serialize)]
 pub struct DailyShiftDto {
-    pub morning: Vec<String>,   // 午前のアサイン名リスト (例: ["Tanaka", "Suzuki"])
+    pub morning: Vec<String>, // 午前のアサイン名リスト (例: ["Tanaka", "Suzuki"])
     pub afternoon: Vec<String>, // 午後のアサイン名リスト
 }
 

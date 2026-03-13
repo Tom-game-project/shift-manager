@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod rule_repo_tests {
+    use shift_manager_tauri_lib::infrastructure::rule_repo::*;
     use sqlx::sqlite::SqlitePoolOptions;
     use sqlx::SqlitePool;
-    use shift_manager_tauri_lib::infrastructure::rule_repo::*;
 
     // 1. テスト用DBセットアップ (最新スキーマ反映)
     async fn setup_test_db() -> SqlitePool {
@@ -38,8 +38,12 @@ mod rule_repo_tests {
 
         // 注意: Assignmentは target_group_id が必要
         // ここで作成した group_id を指定することで外部キー制約を満たす
-        repo.add_rule_assignment(rule_id, 0, 0, group_id, 0).await.unwrap(); // Mon, Morning, Kitchen:0(Tanaka)
-        repo.add_rule_assignment(rule_id, 0, 1, group_id, 1).await.unwrap(); // Mon, Afternoon, Kitchen:1(Suzuki)
+        repo.add_rule_assignment(rule_id, 0, 0, group_id, 0)
+            .await
+            .unwrap(); // Mon, Morning, Kitchen:0(Tanaka)
+        repo.add_rule_assignment(rule_id, 0, 1, group_id, 1)
+            .await
+            .unwrap(); // Mon, Afternoon, Kitchen:1(Suzuki)
 
         // D. 一括取得 (get_plan_config)
         let config = repo.get_plan_config(plan_id).await.unwrap();
@@ -74,12 +78,16 @@ mod rule_repo_tests {
         repo.delete_plan(plan_id).await.unwrap();
 
         // 検証: 子データも消えているはず
-        let group_exists: Option<i64> = sqlx::query_scalar("SELECT id FROM staff_groups WHERE id = ?")
-            .bind(group_id)
-            .fetch_optional(&pool)
-            .await
-            .unwrap();
+        let group_exists: Option<i64> =
+            sqlx::query_scalar("SELECT id FROM staff_groups WHERE id = ?")
+                .bind(group_id)
+                .fetch_optional(&pool)
+                .await
+                .unwrap();
 
-        assert!(group_exists.is_none(), "Plan削除に伴いGroupも削除されているべき");
+        assert!(
+            group_exists.is_none(),
+            "Plan削除に伴いGroupも削除されているべき"
+        );
     }
 }

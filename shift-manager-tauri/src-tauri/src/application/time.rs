@@ -1,5 +1,5 @@
-use chrono::{Datelike, Duration, NaiveDate};
 use crate::domain::shift_calendar_model::AbsWeek;
+use chrono::{Datelike, Duration, NaiveDate};
 
 /// 指定された年・月が、カレンダー上で何週（何行）になるかを計算する
 /// ※ month: 0 (1月) 〜 11 (12月)
@@ -18,16 +18,12 @@ pub fn calculate_weeks_in_month(year: i32, month: u32) -> u32 {
     } else {
         NaiveDate::from_ymd_opt(year, month + 2, 1).unwrap()
     };
-    
-    let days_in_month = next_month_date
-        .signed_duration_since(first_day)
-        .num_days() as u32;
+
+    let days_in_month = next_month_date.signed_duration_since(first_day).num_days() as u32;
 
     // 3. 1日の曜日オフセットを取得 (月曜=0, 火曜=1, ..., 日曜=6)
     // 月曜始まりのカレンダーにおける「第1週の空白の数」
-    let start_offset = first_day
-        .weekday()
-        .num_days_from_monday();
+    let start_offset = first_day.weekday().num_days_from_monday();
 
     // 4. 週数を計算
     // (日数 + オフセット) を 7 で割り、端数を切り上げる
@@ -59,16 +55,15 @@ pub fn calculate_abs_week(year: i32, month: u32, day: u32) -> Option<AbsWeek> {
     let date1 = NaiveDate::from_ymd_opt(1969, 12, 29)
         .unwrap() /* safe unwrap */;
 
-    if let Some(date2)  = NaiveDate::from_ymd_opt(year, month + 1, day) {
+    if let Some(date2) = NaiveDate::from_ymd_opt(year, month + 1, day) {
         let diff: Duration = date2 - date1;
         let weeks = diff.num_weeks();
 
         if weeks < 0 {
             None
         } else {
-            Some(weeks as usize) 
+            Some(weeks as usize)
         }
-        
     } else {
         None
     }

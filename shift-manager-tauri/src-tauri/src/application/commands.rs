@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use tauri::State;
 use crate::application::time::{calculate_abs_week, calculate_weeks_in_month};
 use crate::domain::calendar_logic::calculate_partial_shift;
 use crate::domain::{rule_model::*, shift_calendar_model::*};
 use crate::AppServices;
+use tauri::State;
 
 // --- Plan Commands ---
 #[tauri::command]
@@ -23,13 +23,20 @@ pub async fn delete_plan(id: i64, repo: State<'_, AppServices>) -> Result<(), St
 }
 
 #[tauri::command]
-pub async fn get_plan_config(plan_id: i64, repo: State<'_, AppServices>) -> Result<PlanConfig, String> {
+pub async fn get_plan_config(
+    plan_id: i64,
+    repo: State<'_, AppServices>,
+) -> Result<PlanConfig, String> {
     repo.rule.get_plan_config(plan_id).await
 }
 
 // --- Group / Member ---
 #[tauri::command]
-pub async fn add_staff_group(plan_id: i64, name: String, repo: State<'_, AppServices>) -> Result<i64, String> {
+pub async fn add_staff_group(
+    plan_id: i64,
+    name: String,
+    repo: State<'_, AppServices>,
+) -> Result<i64, String> {
     repo.rule.add_staff_group(plan_id, &name).await
 }
 
@@ -39,28 +46,47 @@ pub async fn delete_staff_group(group_id: i64, repo: State<'_, AppServices>) -> 
 }
 
 #[tauri::command]
-pub async fn update_group_name(group_id: i64, name: String, repo: State<'_, AppServices>) -> Result<(), String> {
+pub async fn update_group_name(
+    group_id: i64,
+    name: String,
+    repo: State<'_, AppServices>,
+) -> Result<(), String> {
     repo.rule.update_group_name(group_id, &name).await
 }
 
 #[tauri::command]
-pub async fn add_staff_member(group_id: i64, name: String, repo: State<'_, AppServices>) -> Result<i64, String> {
+pub async fn add_staff_member(
+    group_id: i64,
+    name: String,
+    repo: State<'_, AppServices>,
+) -> Result<i64, String> {
     repo.rule.add_staff_member(group_id, &name).await
 }
 
 #[tauri::command]
-pub async fn delete_staff_member(member_id: i64, repo: State<'_, AppServices>) -> Result<(), String> {
+pub async fn delete_staff_member(
+    member_id: i64,
+    repo: State<'_, AppServices>,
+) -> Result<(), String> {
     repo.rule.delete_staff_member(member_id).await
 }
 
 #[tauri::command]
-pub async fn update_member_name(member_id: i64, name: String, repo: State<'_, AppServices>) -> Result<(), String> {
+pub async fn update_member_name(
+    member_id: i64,
+    name: String,
+    repo: State<'_, AppServices>,
+) -> Result<(), String> {
     repo.rule.update_member_name(member_id, &name).await
 }
 
 // --- Rules ---
 #[tauri::command]
-pub async fn add_weekly_rule(plan_id: i64, name: String, repo: State<'_, AppServices>) -> Result<i64, String> {
+pub async fn add_weekly_rule(
+    plan_id: i64,
+    name: String,
+    repo: State<'_, AppServices>,
+) -> Result<i64, String> {
     repo.rule.add_weekly_rule(plan_id, &name).await
 }
 
@@ -70,53 +96,82 @@ pub async fn delete_weekly_rule(rule_id: i64, repo: State<'_, AppServices>) -> R
 }
 
 #[tauri::command]
-pub async fn update_rule_name(rule_id: i64, name: String, repo: State<'_, AppServices>) -> Result<(), String> {
+pub async fn update_rule_name(
+    rule_id: i64,
+    name: String,
+    repo: State<'_, AppServices>,
+) -> Result<(), String> {
     repo.rule.update_rule_name(rule_id, &name).await
 }
 
 #[tauri::command]
-pub async fn add_rule_assignment(rule_id: i64, weekday: i64, shift_time: i64, group_id: i64, member_index: i64, repo: State<'_, AppServices>) -> Result<i64, String> {
-    repo.rule.add_rule_assignment(rule_id, weekday, shift_time, group_id, member_index).await
+pub async fn add_rule_assignment(
+    rule_id: i64,
+    weekday: i64,
+    shift_time: i64,
+    group_id: i64,
+    member_index: i64,
+    repo: State<'_, AppServices>,
+) -> Result<i64, String> {
+    repo.rule
+        .add_rule_assignment(rule_id, weekday, shift_time, group_id, member_index)
+        .await
 }
 
 #[tauri::command]
-pub async fn delete_assignment(assignment_id: i64, repo: State<'_, AppServices>) -> Result<(), String> {
+pub async fn delete_assignment(
+    assignment_id: i64,
+    repo: State<'_, AppServices>,
+) -> Result<(), String> {
     repo.rule.delete_assignment(assignment_id).await
 }
 
 // --- Calendar ---
 
 #[tauri::command]
-pub async fn get_calendar_state(plan_id: i64, repo: State<'_, AppServices>) -> Result<Option<ShiftCalendarManager>, String> {
+pub async fn get_calendar_state(
+    plan_id: i64,
+    repo: State<'_, AppServices>,
+) -> Result<Option<ShiftCalendarManager>, String> {
     repo.calendar.find_by_plan_id(plan_id).await
 }
 
 // --- Calendar ---
 #[tauri::command]
-pub async fn create_calendar(plan_id: i64, base_abs_week: usize, initial_delta: usize, repo: State<'_, AppServices>) -> Result<i64, String> {
+pub async fn create_calendar(
+    plan_id: i64,
+    base_abs_week: usize,
+    initial_delta: usize,
+    repo: State<'_, AppServices>,
+) -> Result<i64, String> {
     // Repository側の create_calendar を呼び出す
-    repo.calendar.create_calendar(plan_id, base_abs_week, initial_delta).await
+    repo.calendar
+        .create_calendar(plan_id, base_abs_week, initial_delta)
+        .await
 }
-
 
 #[tauri::command]
 pub async fn append_timeline(
     plan_id: i64,
     start_abs_week: usize,
-    statuses: Vec<Option<i64/*rule id*/>>, 
-    repo: State<'_, AppServices>
-    ) -> Result<(), String> {
+    statuses: Vec<Option<i64 /*rule id*/>>,
+    repo: State<'_, AppServices>,
+) -> Result<(), String> {
     // Repository側の try_to_append_timeline を呼び出す
-    repo.calendar.try_to_append_timeline(plan_id, start_abs_week, statuses).await
+    repo.calendar
+        .try_to_append_timeline(plan_id, start_abs_week, statuses)
+        .await
 }
 
 #[tauri::command]
 pub async fn update_initial_delta(
     plan_id: i64,
     initial_delta: usize,
-    repo: State<'_, AppServices>
+    repo: State<'_, AppServices>,
 ) -> Result<(), String> {
-    repo.calendar.update_initial_delta(plan_id, initial_delta).await
+    repo.calendar
+        .update_initial_delta(plan_id, initial_delta)
+        .await
 }
 
 #[tauri::command]
@@ -124,20 +179,20 @@ pub async fn delete_future_shifts(
     plan_id: i64,
     year: i32,
     month: u32,
-    repo: State<'_, AppServices>
+    repo: State<'_, AppServices>,
 ) -> Result<(), String> {
     // 指定された月(の1週目)から削除を開始する
     let start_week_abs = calculate_abs_week(year, month, 1).ok_or("Invalid date")?;
-    repo.calendar.delete_future_shifts(plan_id, start_week_abs).await
+    repo.calendar
+        .delete_future_shifts(plan_id, start_week_abs)
+        .await
 }
-
-
 
 #[tauri::command]
 pub async fn generate_and_save_shift(
-    plan_id: i64, 
-    skips: Vec<bool>, 
-    year: i32, 
+    plan_id: i64,
+    skips: Vec<bool>,
+    year: i32,
     month: u32,
     initial_delta: Option<usize>,
     repo: State<'_, AppServices>,
@@ -174,27 +229,36 @@ pub async fn generate_and_save_shift(
     // 3. statuses (Vec<Option<i64>>) の構築
     // skips: true -> None (Skipped)
     // skips: false -> Some(default_rule_id) (Active)
-    let statuses: Vec<Option<i64>> = skips.iter().map(|&is_skip| {
-        if is_skip {
-            None
-        } else {
-            Some(default_rule_id)
-        }
-    }).collect();
+    let statuses: Vec<Option<i64>> = skips
+        .iter()
+        .map(
+            |&is_skip| {
+                if is_skip {
+                    None
+                } else {
+                    Some(default_rule_id)
+                }
+            },
+        )
+        .collect();
 
     if statuses.is_empty() {
         return Ok(()); // 保存するものがない
     }
 
     // 4. 保存
-    repo.calendar.try_to_append_timeline(plan_id, start_week_abs, statuses).await?;
+    repo.calendar
+        .try_to_append_timeline(plan_id, start_week_abs, statuses)
+        .await?;
 
     Ok(())
 }
 
-use crate::application::dto::{MonthlyShiftResult, WeeklyShiftDto, DailyShiftDto, WeeklyShiftInfo};
+use crate::application::dto::{DailyShiftDto, MonthlyShiftResult, WeeklyShiftDto, WeeklyShiftInfo};
 
-use shift_calendar::shift_gen::{DayRule, Incomplete, ShiftHoll, StaffGroup, StaffGroupList, WeekRule, WeekRuleTable};
+use shift_calendar::shift_gen::{
+    DayRule, Incomplete, ShiftHoll, StaffGroup, StaffGroupList, WeekRule, WeekRuleTable,
+};
 
 /// ====================================================================
 /// 1. StaffGroupList の構築と、IDマップの作成
@@ -226,13 +290,11 @@ fn db2staff_group_domain(plan_config: &PlanConfig) -> (StaffGroupList, HashMap<i
 // 引数に group_id_map を追加
 fn db2rule_domain<'a>(
     plan_config: &PlanConfig,
-    group_id_map: &HashMap<i64, usize>
+    group_id_map: &HashMap<i64, usize>,
 ) -> WeekRuleTable<'a, Incomplete> {
-
     let mut week_table = WeekRuleTable::new();
     for rule_row in &plan_config.rules {
-
-        let mut days:[DayRule<'_, Incomplete>; 7] = core::array::from_fn(|_| DayRule {
+        let mut days: [DayRule<'_, Incomplete>; 7] = core::array::from_fn(|_| DayRule {
             shift_morning: Vec::new(),
             shift_afternoon: Vec::new(),
         });
@@ -242,34 +304,29 @@ fn db2rule_domain<'a>(
             let shift_time = assign.shift_time_type;
 
             let day = match week_day {
-                Weekday::Monday    => &mut days[0],
-                Weekday::Tuesday   => &mut days[1],
+                Weekday::Monday => &mut days[0],
+                Weekday::Tuesday => &mut days[1],
                 Weekday::Wednesday => &mut days[2],
-                Weekday::Thursday  => &mut days[3],
-                Weekday::Friday    => &mut days[4],
-                Weekday::Saturday  => &mut days[5],
-                Weekday::Sunday    => &mut days[6],
+                Weekday::Thursday => &mut days[3],
+                Weekday::Friday => &mut days[4],
+                Weekday::Saturday => &mut days[5],
+                Weekday::Sunday => &mut days[6],
             };
 
             // ★修正: 危険な `- 1` をやめ、マップから安全にインデックスを取得する
-            let group_index = *group_id_map.get(&assign.target_group_id)
+            let group_index = *group_id_map
+                .get(&assign.target_group_id)
                 .expect("DBの整合性エラー：存在しないグループIDがアサインされています");
 
             match shift_time {
-                ShiftTime::Morning =>
-                    day.shift_morning.push(
-                        ShiftHoll::new(
-                            group_index, // ★取得した安全なインデックスを使う
-                            assign.target_member_index as usize,
-                        )
-                    ),
-                ShiftTime::Afternoon =>
-                    day.shift_afternoon.push(
-                        ShiftHoll::new(
-                            group_index, // ★ここも同じ
-                            assign.target_member_index as usize,
-                        )
-                    ),
+                ShiftTime::Morning => day.shift_morning.push(ShiftHoll::new(
+                    group_index, // ★取得した安全なインデックスを使う
+                    assign.target_member_index as usize,
+                )),
+                ShiftTime::Afternoon => day.shift_afternoon.push(ShiftHoll::new(
+                    group_index, // ★ここも同じ
+                    assign.target_member_index as usize,
+                )),
             }
         }
         week_table.add_week_rule(WeekRule(days));
@@ -297,7 +354,7 @@ pub async fn derive_monthly_shift(
     let calendar_id = if let Some(cal_id) = calendar.id {
         cal_id
     } else {
-        return Err(String::from("カレンダーを作成してください"))
+        return Err(String::from("カレンダーを作成してください"));
     };
 
     let base_abs_week = calendar.base_abs_week as usize; // 型がusizeの場合はキャスト
@@ -315,7 +372,7 @@ pub async fn derive_monthly_shift(
         return Err("No Error Manager does not found.".to_string());
     };
 
-    let start_week_abs = if let Some (week_abs) = calculate_abs_week(target_year, target_month, 1) {
+    let start_week_abs = if let Some(week_abs) = calculate_abs_week(target_year, target_month, 1) {
         week_abs
     } else {
         return Err(String::from("base abs の計算に失敗しました"));
@@ -325,15 +382,15 @@ pub async fn derive_monthly_shift(
 
     let start_offset = start_week_abs - base_abs_week;
 
-    let week_status_list = repo.calendar.fetch_status_range(
-        calendar_id,
-        start_offset as i64,
-        range as i64).await?;
+    let week_status_list = repo
+        .calendar
+        .fetch_status_range(calendar_id, start_offset as i64, range as i64)
+        .await?;
 
     // databaseをドメインロジック向けに編集する
 
     // 1. DBからドメインへの変換と、IDマップの取得
-    let (domain_groups, group_id_map) = db2staff_group_domain(&plan_config); 
+    let (domain_groups, group_id_map) = db2staff_group_domain(&plan_config);
 
     // println!("{} ", plan_id);
     // println!("plan_config: {:#?} ", plan_config);
@@ -368,27 +425,29 @@ pub async fn derive_monthly_shift(
                 WeekStatus::Active { .. } => {
                     // Activeならシフトがあるはず
                     let dto = shift_opt.map(|week| {
-                        let days_dto: Vec<DailyShiftDto> = week.0
+                        let days_dto: Vec<DailyShiftDto> = week
+                            .0
                             .into_iter()
                             .map(|day| DailyShiftDto {
                                 morning: day.shift_morning.iter().map(|t| t.name.clone()).collect(),
-                                afternoon: day.shift_afternoon.iter().map(|t| t.name.clone()).collect(),
+                                afternoon: day
+                                    .shift_afternoon
+                                    .iter()
+                                    .map(|t| t.name.clone())
+                                    .collect(),
                             })
                             .collect();
                         WeeklyShiftDto { days: days_dto }
                     });
                     ("Active", dto)
-                },
-                WeekStatus::Skipped => {
-                    ("Skipped", None)
                 }
+                WeekStatus::Skipped => ("Skipped", None),
             };
 
             result_weeks.push(WeeklyShiftInfo {
                 status: status_str.to_string(),
                 shift: shift_dto,
             });
-
         } else {
             // DBにないので Pending
             result_weeks.push(WeeklyShiftInfo {
@@ -398,5 +457,7 @@ pub async fn derive_monthly_shift(
         }
     }
 
-    Ok(MonthlyShiftResult { weeks: result_weeks })
+    Ok(MonthlyShiftResult {
+        weeks: result_weeks,
+    })
 }

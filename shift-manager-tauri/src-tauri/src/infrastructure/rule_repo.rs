@@ -1,5 +1,5 @@
-use sqlx::SqlitePool;
 use crate::domain::rule_model::*;
+use sqlx::SqlitePool;
 
 pub struct RuleRepository {
     pool: SqlitePool,
@@ -60,21 +60,22 @@ impl RuleRepository {
     pub async fn add_staff_group(&self, plan_id: i64, name: &str) -> Result<i64, String> {
         // 現在の最大sort_orderを取得して +1 する
         let next_order: i64 = sqlx::query_scalar(
-            "SELECT COALESCE(MAX(sort_order), -1) + 1 FROM staff_groups WHERE plan_id = ?"
+            "SELECT COALESCE(MAX(sort_order), -1) + 1 FROM staff_groups WHERE plan_id = ?",
         )
         .bind(plan_id)
         .fetch_one(&self.pool)
         .await
         .map_err(|e| e.to_string())?;
 
-        let id = sqlx::query("INSERT INTO staff_groups (plan_id, name, sort_order) VALUES (?, ?, ?)")
-            .bind(plan_id)
-            .bind(name)
-            .bind(next_order)
-            .execute(&self.pool)
-            .await
-            .map_err(|e| e.to_string())?
-            .last_insert_rowid();
+        let id =
+            sqlx::query("INSERT INTO staff_groups (plan_id, name, sort_order) VALUES (?, ?, ?)")
+                .bind(plan_id)
+                .bind(name)
+                .bind(next_order)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?
+                .last_insert_rowid();
         Ok(id)
     }
 
@@ -103,21 +104,22 @@ impl RuleRepository {
 
     pub async fn add_staff_member(&self, group_id: i64, name: &str) -> Result<i64, String> {
         let next_order: i64 = sqlx::query_scalar(
-            "SELECT COALESCE(MAX(sort_order), -1) + 1 FROM staff_members WHERE group_id = ?"
+            "SELECT COALESCE(MAX(sort_order), -1) + 1 FROM staff_members WHERE group_id = ?",
         )
         .bind(group_id)
         .fetch_one(&self.pool)
         .await
         .map_err(|e| e.to_string())?;
 
-        let id = sqlx::query("INSERT INTO staff_members (group_id, name, sort_order) VALUES (?, ?, ?)")
-            .bind(group_id)
-            .bind(name)
-            .bind(next_order)
-            .execute(&self.pool)
-            .await
-            .map_err(|e| e.to_string())?
-            .last_insert_rowid();
+        let id =
+            sqlx::query("INSERT INTO staff_members (group_id, name, sort_order) VALUES (?, ?, ?)")
+                .bind(group_id)
+                .bind(name)
+                .bind(next_order)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?
+                .last_insert_rowid();
         Ok(id)
     }
 
@@ -148,21 +150,22 @@ impl RuleRepository {
 
     pub async fn add_weekly_rule(&self, plan_id: i64, name: &str) -> Result<i64, String> {
         let next_order: i64 = sqlx::query_scalar(
-            "SELECT COALESCE(MAX(sort_order), -1) + 1 FROM weekly_rules WHERE plan_id = ?"
+            "SELECT COALESCE(MAX(sort_order), -1) + 1 FROM weekly_rules WHERE plan_id = ?",
         )
         .bind(plan_id)
         .fetch_one(&self.pool)
         .await
         .map_err(|e| e.to_string())?;
 
-        let id = sqlx::query("INSERT INTO weekly_rules (plan_id, name, sort_order) VALUES (?, ?, ?)")
-            .bind(plan_id)
-            .bind(name)
-            .bind(next_order)
-            .execute(&self.pool)
-            .await
-            .map_err(|e| e.to_string())?
-            .last_insert_rowid();
+        let id =
+            sqlx::query("INSERT INTO weekly_rules (plan_id, name, sort_order) VALUES (?, ?, ?)")
+                .bind(plan_id)
+                .bind(name)
+                .bind(next_order)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?
+                .last_insert_rowid();
         Ok(id)
     }
 
@@ -195,7 +198,7 @@ impl RuleRepository {
         weekday: i64,
         shift_time: i64,
         group_id: i64,
-        member_index: i64
+        member_index: i64,
     ) -> Result<i64, String> {
         let id = sqlx::query(
             "INSERT INTO rule_assignments (weekly_rule_id, weekday, shift_time_type, target_group_id, target_member_index)
@@ -257,10 +260,7 @@ impl RuleRepository {
             .await
             .map_err(|e| e.to_string())?;
 
-            groups_with_members.push(StaffGroupWithMembers {
-                group: g,
-                members,
-            });
+            groups_with_members.push(StaffGroupWithMembers { group: g, members });
         }
 
         // 4. Rules
@@ -309,4 +309,3 @@ impl RuleRepository {
         .map_err(|e| e.to_string())
     }
 }
-

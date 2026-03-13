@@ -1,18 +1,8 @@
-use sqlx::{ 
-    QueryBuilder,
-    SqlitePool,
-    Sqlite,
-    FromRow,
-    Row,
-};
+use sqlx::{FromRow, QueryBuilder, Row, Sqlite, SqlitePool};
 
 use crate::domain::{
-    rule_model::{WeeklyRule, RuleAssignment},
-    shift_calendar_model::{
-        WeekStatus,
-        PlanId,
-        ShiftCalendarManager
-    }
+    rule_model::{RuleAssignment, WeeklyRule},
+    shift_calendar_model::{PlanId, ShiftCalendarManager, WeekStatus},
 };
 
 pub struct CalendarRepository {
@@ -49,7 +39,7 @@ use serde::Serialize;
 pub struct WeeklyRuleWithAssignments {
     // #[serde(flatten)] をつけると、JSON化したときに rule の中身がトップレベルに展開されます
     // { "id": 1, "name": "RuleA", "assignments": [...] } となり使いやすいです
-    #[serde(flatten)] 
+    #[serde(flatten)]
     pub rule: WeeklyRule,
     pub assignments: Vec<RuleAssignment>,
 }
@@ -84,7 +74,6 @@ impl CalendarRepository {
         base_abs_week: usize,
         initial_delta: usize,
     ) -> Result<i64, String> {
-
         let mut tx = self.pool.begin().await.map_err(|e| e.to_string())?;
 
         // 1. 既存カレンダーのチェック（重複作成の防止）
@@ -98,7 +87,7 @@ impl CalendarRepository {
             let existing_id: i64 = row.get("id");
             // 既に存在する場合は、トランザクションをキャンセルしてエラーを返す
             return Err(format!(
-                "Plan ID: {} のカレンダーは既に存在します (Calendar ID: {})", 
+                "Plan ID: {} のカレンダーは既に存在します (Calendar ID: {})",
                 plan_id, existing_id
             ));
         }
@@ -106,7 +95,7 @@ impl CalendarRepository {
         // 2. 新規カレンダーの挿入 (INSERT)
         let new_calendar_id = sqlx::query(
             "INSERT INTO shift_calendars (plan_id, base_abs_week, initial_delta) 
-             VALUES (?, ?, ?)"
+             VALUES (?, ?, ?)",
         )
         .bind(plan_id)
         .bind(base_abs_week as i64)
@@ -144,13 +133,15 @@ impl CalendarRepository {
         let mut tx = self.pool.begin().await.map_err(|e| e.to_string())?;
 
         // 1. カレンダー情報の取得
-        let cal_row = sqlx::query("SELECT id, base_abs_week FROM shift_calendars WHERE plan_id = ?")
-            .bind(plan_id)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(|e| e.to_string())?;
+        let cal_row =
+            sqlx::query("SELECT id, base_abs_week FROM shift_calendars WHERE plan_id = ?")
+                .bind(plan_id)
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(|e| e.to_string())?;
 
-        let cal = cal_row.ok_or_else(|| format!("Plan ID: {} のカレンダーが存在しません。", plan_id))?;
+        let cal =
+            cal_row.ok_or_else(|| format!("Plan ID: {} のカレンダーが存在しません。", plan_id))?;
         let calendar_id: i64 = cal.get("id");
         let base_abs_week: i64 = cal.get("base_abs_week");
 
@@ -169,25 +160,24 @@ impl CalendarRepository {
         Ok(())
     }
 
-
-
     pub async fn try_to_append_timeline(
         &self,
         plan_id: i64,
         start_abs_week: usize,
         status_iterator: impl IntoIterator<Item = Option<i64>>,
     ) -> Result<(), String> {
-
         let mut tx = self.pool.begin().await.map_err(|e| e.to_string())?;
 
         // 1. カレンダー情報の取得
-        let cal_row = sqlx::query("SELECT id, base_abs_week FROM shift_calendars WHERE plan_id = ?")
-            .bind(plan_id)
-            .fetch_optional(&mut *tx)
-            .await
-            .map_err(|e| e.to_string())?;
+        let cal_row =
+            sqlx::query("SELECT id, base_abs_week FROM shift_calendars WHERE plan_id = ?")
+                .bind(plan_id)
+                .fetch_optional(&mut *tx)
+                .await
+                .map_err(|e| e.to_string())?;
 
-        let cal = cal_row.ok_or_else(|| format!("Plan ID: {} のカレンダーが存在しません。", plan_id))?;
+        let cal =
+            cal_row.ok_or_else(|| format!("Plan ID: {} のカレンダーが存在しません。", plan_id))?;
         let calendar_id: i64 = cal.get("id");
         let base_abs_week: i64 = cal.get("base_abs_week");
 
@@ -195,7 +185,7 @@ impl CalendarRepository {
         // DBが空（作成直後）の場合は -1 となる
         let row = sqlx::query(
             "SELECT MAX(week_offset) as max_offset, MAX(logical_delta) as max_logical_delta
-             FROM weekly_statuses WHERE calendar_id = ?"
+             FROM weekly_statuses WHERE calendar_id = ?",
         )
         .bind(calendar_id)
         .fetch_one(&mut *tx)
@@ -203,7 +193,10 @@ impl CalendarRepository {
         .map_err(|e| e.to_string())?;
 
         let current_db_cursor: i64 = row.try_get("max_offset").unwrap_or(None).unwrap_or(-1);
-        let mut local_logical_delta: i64 = row.try_get("max_logical_delta").unwrap_or(None).unwrap_or(-1);
+        let mut local_logical_delta: i64 = row
+            .try_get("max_logical_delta")
+            .unwrap_or(None)
+            .unwrap_or(-1);
 
         // 今回のリストの開始オフセット
         let start_offset = (start_abs_week as i64) - base_abs_week;
@@ -239,7 +232,7 @@ impl CalendarRepository {
                 Some(rule_id) => {
                     local_logical_delta += 1;
                     ("Active", Some(local_logical_delta), Some(rule_id))
-                },
+                }
                 None => ("Skipped", None, None),
             };
 
@@ -261,15 +254,20 @@ impl CalendarRepository {
         Ok(())
     }
 
-    pub async fn find_by_plan_id(&self, plan_id: i64) -> Result<Option<ShiftCalendarManager>, String> {
-        let header_opt: Option<CalendarHeaderRow> = sqlx::query_as::<Sqlite, CalendarHeaderRow>("
+    pub async fn find_by_plan_id(
+        &self,
+        plan_id: i64,
+    ) -> Result<Option<ShiftCalendarManager>, String> {
+        let header_opt: Option<CalendarHeaderRow> = sqlx::query_as::<Sqlite, CalendarHeaderRow>(
+            "
             SELECT id, plan_id, base_abs_week, initial_delta 
             FROM shift_calendars 
-            WHERE plan_id = ? LIMIT 1")
-            .bind(plan_id)
-            .fetch_optional(&self.pool)
-            .await
-            .map_err(|e| e.to_string())?;
+            WHERE plan_id = ? LIMIT 1",
+        )
+        .bind(plan_id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
 
         let header = match header_opt {
             Some(h) => h,
@@ -277,8 +275,8 @@ impl CalendarRepository {
         };
 
         // let rows: Vec<WeekStatusRow> = sqlx::query_as("
-        //     SELECT week_offset, status_type, logical_delta, rule_id 
-        //     FROM weekly_statuses 
+        //     SELECT week_offset, status_type, logical_delta, rule_id
+        //     FROM weekly_statuses
         //     WHERE calendar_id = ?
         //     ORDER BY week_offset ASC")
         //     .bind(header.id)
@@ -301,13 +299,13 @@ impl CalendarRepository {
         &self,
         calendar_id: i64,
         start_offset: i64,
-        count: i64
+        count: i64,
     ) -> Result<Vec<WeekStatus>, String> {
         let rows = sqlx::query_as::<_, WeekStatusRow>(
             "SELECT week_offset, status_type, logical_delta, rule_id
              FROM weekly_statuses
              WHERE calendar_id = ? AND week_offset >= ? AND week_offset < ?
-             ORDER BY week_offset ASC"
+             ORDER BY week_offset ASC",
         )
         .bind(calendar_id)
         .bind(start_offset)
@@ -317,7 +315,8 @@ impl CalendarRepository {
         .map_err(|e| e.to_string())?;
 
         // DTO -> Domain Model 変換 (省略)
-        let statuses = rows.into_iter()
+        let statuses = rows
+            .into_iter()
             .map(|row| row.try_into()) // ★ ここで変換が走る
             .collect::<Result<Vec<WeekStatus>, String>>()?;
 
@@ -327,7 +326,7 @@ impl CalendarRepository {
     /// IDリストに含まれるルールだけを取得 (IN句を使用)
     pub async fn fetch_rules_by_ids(
         &self,
-        rule_ids: &[i64]
+        rule_ids: &[i64],
     ) -> Result<Vec<WeeklyRuleWithAssignments>, String> {
         if rule_ids.is_empty() {
             return Ok(vec![]);
@@ -338,7 +337,7 @@ impl CalendarRepository {
         // ---------------------------------------------------
         // "SELECT * FROM weekly_rules WHERE id IN (" までを作成
         let mut query_builder: QueryBuilder<Sqlite> = QueryBuilder::new(
-            "SELECT id, plan_id, name, sort_order FROM weekly_rules WHERE id IN ("
+            "SELECT id, plan_id, name, sort_order FROM weekly_rules WHERE id IN (",
         );
 
         // rule_ids をカンマ区切りでバインドしていく
@@ -372,7 +371,7 @@ impl CalendarRepository {
                 target_group_id,
                 target_member_index
              FROM rule_assignments
-             WHERE weekly_rule_id IN ("
+             WHERE weekly_rule_id IN (",
         );
 
         let mut assign_sep = assign_builder.separated(", ");
@@ -419,19 +418,21 @@ impl CalendarRepository {
         let mut conn = self.pool.acquire().await.map_err(|e| e.to_string())?;
 
         // 1. まずカレンダーの基本情報を取得
-        let cal_row = sqlx::query(
-            "SELECT id, base_abs_week FROM shift_calendars WHERE plan_id = ?"
-        )
-        .bind(plan_id)
-        .fetch_optional(&mut *conn)
-        .await
-        .map_err(|e| e.to_string())?;
+        let cal_row =
+            sqlx::query("SELECT id, base_abs_week FROM shift_calendars WHERE plan_id = ?")
+                .bind(plan_id)
+                .fetch_optional(&mut *conn)
+                .await
+                .map_err(|e| e.to_string())?;
 
         // カレンダーが存在しない場合は終了
         let cal_row = match cal_row {
             Some(row) => row,
             None => {
-                println!("--- [DEBUG] Plan ID: {} のカレンダーは見つかりませんでした ---", plan_id);
+                println!(
+                    "--- [DEBUG] Plan ID: {} のカレンダーは見つかりませんでした ---",
+                    plan_id
+                );
                 return Ok(());
             }
         };
@@ -439,7 +440,10 @@ impl CalendarRepository {
         let calendar_id: i64 = cal_row.get("id");
         let base_abs_week: i64 = cal_row.get("base_abs_week");
 
-        println!("--- [DEBUG] Timeline for Plan ID: {} (Calendar ID: {}) ---", plan_id, calendar_id);
+        println!(
+            "--- [DEBUG] Timeline for Plan ID: {} (Calendar ID: {}) ---",
+            plan_id, calendar_id
+        );
         println!("基準絶対週 (base_abs_week): {}", base_abs_week);
         println!("---------------------------------------------------------------");
         println!("| Offset | Absolute Week | Status  | Logical Delta | Rule ID  |");
@@ -450,7 +454,7 @@ impl CalendarRepository {
             "SELECT week_offset, status_type, logical_delta, rule_id
              FROM weekly_statuses
              WHERE calendar_id = ?
-             ORDER BY week_offset ASC"
+             ORDER BY week_offset ASC",
         )
         .bind(calendar_id)
         .fetch_all(&mut *conn)
@@ -487,4 +491,3 @@ impl CalendarRepository {
         Ok(())
     }
 }
-

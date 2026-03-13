@@ -1,16 +1,7 @@
-use crate::domain::shift_calendar_model::{
-    AbsWeek, 
-    ShiftCalendarManager, 
-    WeekStatus,
-    RuleId,
-};
+use crate::domain::shift_calendar_model::{AbsWeek, RuleId, ShiftCalendarManager, WeekStatus};
 
 use shift_calendar::shift_gen::{
-    gen_one_week_shift,
-    WeekRuleTable,
-    WeekDecidedShift,
-    StaffGroupList,
-    Incomplete
+    gen_one_week_shift, Incomplete, StaffGroupList, WeekDecidedShift, WeekRuleTable,
 };
 
 // TODO このエラーを本当にここに置くべきか
@@ -36,18 +27,21 @@ pub fn calculate_partial_shift<'a>(
     staff_group_list: &'a StaffGroupList,
 ) -> Vec<Option<WeekDecidedShift<'a>>> {
     timeline_slice
-        .iter().map(|i|{
-            if let WeekStatus::Active { logical_delta , rule_id} = i {
-                Some(
-                    gen_one_week_shift(
-                        &rule_map, 
-                        staff_group_list,
-                        *logical_delta + delta
-                    )
-                )
+        .iter()
+        .map(|i| {
+            if let WeekStatus::Active {
+                logical_delta,
+                rule_id,
+            } = i
+            {
+                Some(gen_one_week_shift(
+                    &rule_map,
+                    staff_group_list,
+                    *logical_delta + delta,
+                ))
             } else {
                 None
             }
-        }).collect()
+        })
+        .collect()
 }
-
