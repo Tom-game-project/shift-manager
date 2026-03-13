@@ -103,15 +103,17 @@ async function handleGenerate() {
 
     const checkboxes = mount.querySelectorAll('input[type="checkbox"]');
     const skipFlags: boolean[] = [];
+    let hasPending = false;
 
     checkboxes.forEach((cb) => {
         const input = cb as HTMLInputElement;
+        skipFlags.push(input.checked);
         if (!input.disabled) {
-            skipFlags.push(input.checked);
+            hasPending = true;
         }
     });
 
-    if (skipFlags.length === 0) {
+    if (!hasPending) {
         alert("No new (pending) weeks to generate.");
         return;
     }
