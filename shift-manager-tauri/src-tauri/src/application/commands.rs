@@ -139,6 +139,7 @@ pub async fn generate_and_save_shift(
     skips: Vec<bool>, 
     year: i32, 
     month: u32,
+    initial_delta: Option<usize>,
     repo: State<'_, AppServices>,
 ) -> Result<(), String> {
     // 1. ルールの取得 (TODO: 複数ルール対応。現状は最初の1つを使う)
@@ -164,7 +165,8 @@ pub async fn generate_and_save_shift(
 
         let abs = calculate_abs_week(year, month, 1).unwrap_or(0);
         // カレンダー作成
-        repo.calendar.create_calendar(plan_id, abs, 0).await?;
+        let delta = initial_delta.unwrap_or(0);
+        repo.calendar.create_calendar(plan_id, abs, delta).await?;
 
         abs
     };
@@ -303,6 +305,9 @@ pub async fn derive_monthly_shift(
     // 2. 計算に必要な「辞書データ」をDBから全取得して構築
     //    (本来はRepositoryにこの変換ロジックを持たせるのが綺麗ですが、ここでやります)
     let plan_config = repo.rule.get_plan_config(plan_id).await?;
+    if plan_config.rules.is_empty() {
+        return Err("No weekly rules defined. Please create a rule first.".to_string());
+    }
 
     let shift_calendar_manager = if let Some(r) = repo.calendar.find_by_plan_id(plan_id).await? {
         r
@@ -395,5 +400,3 @@ pub async fn derive_monthly_shift(
 
     Ok(MonthlyShiftResult { weeks: result_weeks })
 }
-
-

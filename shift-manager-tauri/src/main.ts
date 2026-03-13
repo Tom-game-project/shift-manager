@@ -121,7 +121,16 @@ async function handleGenerate() {
     console.log("Sending skips to Rust:", skipFlags);
 
     try {
-        await api.generateAndSaveShift(currentPlanId, skipFlags, currentYear, currentMonth);
+        const initialDeltaKey = `initialDelta:${currentPlanId}`;
+        const storedDelta = localStorage.getItem(initialDeltaKey);
+        const parsedDelta = storedDelta !== null ? parseInt(storedDelta, 10) : NaN;
+        const initialDelta = Number.isFinite(parsedDelta) && parsedDelta >= 0 ? parsedDelta : undefined;
+
+        await api.generateAndSaveShift(currentPlanId, skipFlags, currentYear, currentMonth, initialDelta);
+
+        if (initialDelta !== undefined) {
+            localStorage.removeItem(initialDeltaKey);
+        }
         pendingSkips = {}; // Clear pending state
         await renderCalendarViewWrapped();
         alert("Schedule Generated & Saved!");

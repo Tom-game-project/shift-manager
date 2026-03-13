@@ -27,7 +27,8 @@ export const api = {
         invoke("add_rule_assignment", { ruleId, weekday, shiftTime, groupId, memberIndex }),
     deleteAssignment: (assignmentId: number) => invoke("delete_assignment", { assignmentId }),
 
-    generateAndSaveShift: (planId: number, skips: boolean[], year: number, month: number) => invoke("generate_and_save_shift", { planId, skips, year, month }),
+    generateAndSaveShift: (planId: number, skips: boolean[], year: number, month: number, initialDelta?: number) =>
+        invoke("generate_and_save_shift", { planId, skips, year, month, initialDelta }),
     deriveMonthlyShift: (planId: number, targetYear: number, targetMonth: number) =>
         invoke<MonthlyShiftResult>("derive_monthly_shift", { planId, targetYear, targetMonth }),
     getCalendarState: (plan_id: number) => invoke<ShiftCalendarManager>("get_calendar_state", { planId: plan_id }),

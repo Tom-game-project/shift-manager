@@ -329,7 +329,47 @@ async function renderCalendarSettings(planId: number) {
         container.innerHTML = '';
 
         if (!calendarState) {
-            container.innerHTML = '<div style="color:#888; font-style:italic;">No calendar initialized for this plan yet.</div>';
+            const presetKey = `initialDelta:${planId}`;
+            const storedDelta = localStorage.getItem(presetKey);
+            const presetDelta = storedDelta !== null ? storedDelta : "0";
+
+            container.innerHTML = `
+                <div style="color:#888; font-style:italic; margin-bottom:10px;">
+                    No calendar initialized for this plan yet.
+                </div>
+                <div style="background:#fff; padding:15px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <h4 style="margin-top:0; margin-bottom:10px;">Initial Logical Delta (Pre-Calendar)</h4>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="number" id="initial-delta-input" value="${presetDelta}" style="padding:5px; border:1px solid #ccc; border-radius:4px; width:100px;">
+                        <button id="save-delta-btn" class="btn-sm btn-outline">Save</button>
+                        <span id="save-msg" style="font-size:0.9em; color:green; display:none;">Saved!</span>
+                    </div>
+                    <p style="font-size:0.8em; color:#666; margin-top:5px;">
+                        This value will be used the first time you generate a schedule and the calendar is created.
+                    </p>
+                </div>
+            `;
+
+            const btn = document.getElementById('save-delta-btn');
+            const input = document.getElementById('initial-delta-input') as HTMLInputElement;
+            const msg = document.getElementById('save-msg');
+
+            if (btn && input) {
+                btn.onclick = () => {
+                    const val = parseInt(input.value);
+                    if (isNaN(val) || val < 0) {
+                        alert("Please enter a valid non-negative number.");
+                        return;
+                    }
+
+                    localStorage.setItem(presetKey, val.toString());
+                    if (msg) {
+                        msg.style.display = 'inline';
+                        setTimeout(() => { msg.style.display = 'none'; }, 2000);
+                    }
+                };
+            }
+
             return;
         }
 
