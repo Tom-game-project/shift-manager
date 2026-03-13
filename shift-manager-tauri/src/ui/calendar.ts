@@ -156,18 +156,10 @@ export async function renderCalendarView(
                 const dailyShift = weekInfo.shift.days[dayIndex];
                 if (dailyShift) {
                     if (dailyShift.morning && dailyShift.morning.length > 0) {
-                        const mBadge = document.createElement('div');
-                        mBadge.className = 'shift-badge morning';
-                        mBadge.textContent = `AM: ${dailyShift.morning.join(', ')}`;
-                        cell.appendChild(mBadge);
-                        cell.appendChild(mBadge);
+                        cell.appendChild(buildShiftBadge('AM', 'morning', dailyShift.morning));
                     }
                     if (dailyShift.afternoon && dailyShift.afternoon.length > 0) {
-                        const aBadge = document.createElement('div');
-                        aBadge.className = 'shift-badge afternoon';
-                        aBadge.textContent = `PM: ${dailyShift.afternoon.join(', ')}`;
-                        cell.appendChild(aBadge);
-                        cell.appendChild(aBadge);
+                        cell.appendChild(buildShiftBadge('PM', 'afternoon', dailyShift.afternoon));
                     }
                 }
             }
@@ -181,4 +173,27 @@ export async function renderCalendarView(
 
         mount.appendChild(row);
     });
+}
+
+function buildShiftBadge(label: string, className: string, names: string[]) {
+    const badge = document.createElement('div');
+    badge.className = `shift-badge ${className}`;
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'shift-badge-label';
+    labelSpan.textContent = `${label}: `;
+    badge.appendChild(labelSpan);
+
+    names.forEach((name, index) => {
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'shift-name';
+        nameSpan.textContent = name;
+        badge.appendChild(nameSpan);
+
+        if (index < names.length - 1) {
+            badge.appendChild(document.createTextNode(', '));
+        }
+    });
+
+    return badge;
 }

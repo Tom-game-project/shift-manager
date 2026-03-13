@@ -123,7 +123,7 @@ export function openAssignmentModal(
             btn.style.padding = '8px';
             btn.style.textAlign = 'center';
             btn.style.cursor = 'pointer';
-            btn.textContent = `#${mIndex + 1}`;
+            btn.textContent = `#${mIndex}`;
 
             btn.onclick = () => {
                 onAssign(ruleId, weekday, shiftTime, g.group.id, mIndex);
