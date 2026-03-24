@@ -1,52 +1,25 @@
-# 半休取得プログラム
+# Shift Manager (Tauri)
 
-## 説明
+正社員の半休取得を平等に割り当てることを目的としたネイティブアプリ版です。
 
-このソフトウェアは、正社員の半休取得を平等に割り当てることを目的としている.
+## 開発
 
-## 概要
+```sh
+npm install
+cargo tauri dev
+```
 
 ## ビルド
 
 ```sh
-make BUILD=release bun-bundle
+cargo tauri build
 ```
 
 ## ディレクトリ構成
 
-- component-features
-
-  フロントエンドの画面の状態を管理するプログラム
-
-  - src
-
-    Rustのプログラム
-
-  - wit
-
-    Wasm Interface Typeの定義
-    - deps
-
-      jsがcomponent-features(rust)に提供する機能
-
-    - world.wit
-
-      component-features(rust)がmain.tsに提供する機能
-
-- index.html
-
-- style.css
-
-- main.ts 
-
-  Rust(Wasm)を呼び出しUIを表示するプログラム
-
+- src
+  - フロントエンド（Vanilla TS）
+- src-tauri
+  - Tauri（Rust）
 - work_shift_dayoff_logic
-
-
-## shift-manager-tauri
-
-tauriを使ったネイティブアプリ版
-
-## TODO
-
+  - シフト割当ロジック（submodule）
